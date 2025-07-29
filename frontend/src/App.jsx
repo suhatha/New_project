@@ -34,6 +34,9 @@ import QuotationTemplates from "./components/QuotationTemplates";
 import QuoteToJob from "./components/QuoteToJob";
 import PaymentSupport from "./components/PaymentSupport";
 import { PageProvider } from "./context/PageContext";
+import UserManagement from "./components/UserManagement";
+import RoleManagement from "./components/RoleManagement";
+
 
 function ItemFormWrapper() {
   const navigate = useNavigate();
@@ -331,6 +334,26 @@ function App() {
           element={
             <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
               <PaymentSupport />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* User Management route */}
+        <Route
+          path="users"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Role Management route */}
+        <Route
+          path="roles"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <RoleManagement />
             </ProtectedRoute>
           }
         />
