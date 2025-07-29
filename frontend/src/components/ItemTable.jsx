@@ -83,7 +83,7 @@ export default function ItemTable() {
       {/* Top Controls */}
       <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
         <button
-          className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
           onClick={() => setShowForm(true)}
         >
           <FiFilePlus /> Add Item
