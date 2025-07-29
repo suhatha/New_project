@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { FaFileAlt, FaTools, FaCheck, FaTimes, FaEye, FaEdit, FaPlay, FaClock, FaUser, FaCar } from 'react-icons/fa';
 
 const QuoteToJob = () => {
@@ -243,32 +243,9 @@ const QuoteToJob = () => {
     }
   };
 
-  const approvedQuotes = useMemo(() => {
-    try {
-      return quotes.filter(quote => quote.status === 'Approved');
-    } catch (error) {
-      console.error('Error filtering approved quotes:', error);
-      return [];
-    }
-  }, [quotes]);
-
-  const pendingQuotes = useMemo(() => {
-    try {
-      return quotes.filter(quote => quote.status === 'Pending');
-    } catch (error) {
-      console.error('Error filtering pending quotes:', error);
-      return [];
-    }
-  }, [quotes]);
-
-  const activeJobs = useMemo(() => {
-    try {
-      return quotes.filter(quote => quote.jobOrder && quote.jobOrder.status === 'In Progress');
-    } catch (error) {
-      console.error('Error filtering active jobs:', error);
-      return [];
-    }
-  }, [quotes]);
+  const approvedQuotes = quotes.filter(quote => quote.status === 'Approved');
+  const pendingQuotes = quotes.filter(quote => quote.status === 'Pending');
+  const activeJobs = quotes.filter(quote => quote.jobOrder && quote.jobOrder.status === 'In Progress');
 
   try {
     return (
@@ -565,11 +542,8 @@ const QuoteToJob = () => {
                     <div><strong>Customer:</strong> {selectedQuote.customerName}</div>
                     <div><strong>Vehicle:</strong> {selectedQuote.vehicleNumber}</div>
                     <div><strong>Service Type:</strong> {selectedQuote.serviceType}</div>
-                    <div><strong>Amount:</strong> LKR {selectedQuote.quoteAmount.toFixed(2)}</div>
                     <div><strong>Status:</strong> {selectedQuote.status}</div>
-                    {selectedQuote.approvedAt && (
-                      <div><strong>Approved At:</strong> {selectedQuote.approvedAt}</div>
-                    )}
+                    <div><strong>Created:</strong> {selectedQuote.createdAt}</div>
                     {selectedQuote.approvedBy && (
                       <div><strong>Approved By:</strong> {selectedQuote.approvedBy}</div>
                     )}

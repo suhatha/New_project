@@ -232,9 +232,8 @@ const Sidebar = () => {
               </button>
               {invoicingOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
-                  {navItem(FaCalculator, "Custom Qty", "/custom-qty")}
-                  {navItem(FaFileAlt, "Quotation Template", "/quotation-template")}
-                  {navItem(FaExchangeAlt, "Auto-convert Quotes to Job Orders", "/auto-convert")}
+                  {navItem(FaFileAlt, "Quotation Templates", "/quotation-templates")}
+                  {navItem(FaExchangeAlt, "Quote to Job Orders", "/quote-to-job")}
                   {navItem(FaCreditCard, "Multi-mode Payment Support", "/payment-support")}
                 </ul>
               )}
@@ -308,9 +307,9 @@ const Sidebar = () => {
               </button>
               {multiBranchOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
-                  {navItem(FaNetworkWired, "Manage Unlimited Locations & Franchises", "/locations")}
-                  {navItem(FaTachometerAlt, "Central Dashboard for Owners", "/central-dashboard")}
-                  {navItem(FaServer, "Cloud-based or On-Premise Hosting", "/hosting")}
+                  {navItem(FaNetworkWired, "Manage Unlimited Locations & Franchises", "/branch-locations")}
+                  {navItem(FaTachometerAlt, "Central Dashboard for Owners", "/owner-dashboard")}
+                  {navItem(FaServer, "Cloud-based or On-Premise Hosting", "/cloud-hosting")}
                 </ul>
               )}
             </li>

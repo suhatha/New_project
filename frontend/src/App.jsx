@@ -33,6 +33,21 @@ import TechnicianTracking from "./components/TechnicianTracking";
 import QuotationTemplates from "./components/QuotationTemplates";
 import QuoteToJob from "./components/QuoteToJob";
 import PaymentSupport from "./components/PaymentSupport";
+import VehicleProfiles from "./components/VehicleProfiles";
+import InsuranceWarranty from "./components/InsuranceWarranty";
+import PaymentVoucher from "./components/PaymentVoucher";
+import ReceiptVoucher from "./components/ReceiptVoucher";
+import Ledger from "./components/Ledger";
+import Statement from "./components/Statement";
+import ProfitLoss from "./components/ProfitLoss";
+import BalanceSheet from "./components/BalanceSheet";
+import TrialBalance from "./components/TrialBalance";
+import Attendance from "./components/Attendance";
+import ShiftPlanning from "./components/ShiftPlanning";
+import Payroll from "./components/Payroll";
+import BranchLocations from "./components/BranchLocations";
+import OwnerDashboard from "./components/OwnerDashboard";
+import CloudHosting from "./components/CloudHosting";
 import { PageProvider } from "./context/PageContext";
 
 function ItemFormWrapper() {
@@ -331,6 +346,136 @@ function App() {
           element={
             <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
               <PaymentSupport />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Vehicle Profiles route */}
+        <Route
+          path="vehicle-profiles"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <VehicleProfiles />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Insurance Warranty route */}
+        <Route
+          path="insurance-warranty"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <InsuranceWarranty />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Accounting Routes */}
+        <Route
+          path="payment-voucher"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <PaymentVoucher />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="receipt-voucher"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <ReceiptVoucher />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="ledger"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Ledger />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="statement"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Statement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="profit-loss"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <ProfitLoss />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="balance-sheet"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <BalanceSheet />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="trial-balance"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <TrialBalance />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* HR & Payroll Routes */}
+        <Route
+          path="attendance"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Attendance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="shift-planning"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <ShiftPlanning />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="payroll"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Payroll />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Multi-Branch & Cloud Access Routes */}
+        <Route
+          path="branch-locations"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin"]}>
+              <BranchLocations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="owner-dashboard"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin"]}>
+              <OwnerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="cloud-hosting"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin"]}>
+              <CloudHosting />
             </ProtectedRoute>
           }
         />
