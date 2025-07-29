@@ -9,6 +9,31 @@ import MainLayout from "./components/MainLayout";
 import ItemForm from "./components/ItemForm";
 import ItemTable from "./components/ItemTable";
 import Logout from "./components/Logout";
+import BranchManagement from "./components/BranchManagement";
+import Expiry from "./components/Expiry";
+import Supplier from "./components/Supplier";
+import Category from "./components/Category";
+import Company from "./components/Company";
+import Unit from "./components/Unit";
+import StoreLocation from "./components/StoreLocation";
+import Barcode from "./components/Barcode";
+import ItemAgeAnalysis from "./components/ItemAgeAnalysis";
+import Sales from "./components/Sales";
+import TaxManagement from "./components/TaxManagement";
+import SalesReturn from "./components/SalesReturn";
+import CustomerManagement from "./components/CustomerManagement";
+import Purchasing from "./components/Purchasing";
+import PurchaseOrder from "./components/PurchaseOrder";
+import Quotation from "./components/Quotation";
+import JobScheduler from "./components/JobScheduler";
+import ServiceBay from "./components/ServiceBay";
+import PartsEstimation from "./components/PartsEstimation";
+import PhotoUpload from "./components/PhotoUpload";
+import TechnicianTracking from "./components/TechnicianTracking";
+import QuotationTemplates from "./components/QuotationTemplates";
+import QuoteToJob from "./components/QuoteToJob";
+import PaymentSupport from "./components/PaymentSupport";
+import { PageProvider } from "./context/PageContext";
 
 function ItemFormWrapper() {
   const navigate = useNavigate();
@@ -23,21 +48,22 @@ function ItemFormWrapper() {
 
 function App() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="/logout" element={<Logout />} />
+    <PageProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/logout" element={<Logout />} />
 
-      {/* Protected Routes wrapped with MainLayout */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
+        {/* Protected Routes wrapped with MainLayout */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
         {/* Default redirect to dashboard */}
         <Route index element={<Navigate to="dashboard" replace />} />
 
@@ -69,6 +95,246 @@ function App() {
           }
         />
 
+        {/* Branch Management route */}
+        <Route
+          path="branch-management"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <BranchManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Expiry route */}
+        <Route
+          path="expiry"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Expiry />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Supplier route */}
+        <Route
+          path="supplier"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Supplier />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Category route */}
+        <Route
+          path="category"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Category />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Company route */}
+        <Route
+          path="company"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Company />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Unit route */}
+        <Route
+          path="unit"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Unit />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Store Location route */}
+        <Route
+          path="store-location"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <StoreLocation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Barcode route */}
+        <Route
+          path="barcode"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Barcode />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Item Age Analysis route */}
+        <Route
+          path="item-age-analysis"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <ItemAgeAnalysis />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Sales route */}
+        <Route
+          path="sales"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Sales />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Tax Management route */}
+        <Route
+          path="tax-management"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <TaxManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Sales Return route */}
+        <Route
+          path="sales-return"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <SalesReturn />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Customer Management route */}
+        <Route
+          path="customer-management"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <CustomerManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Purchasing route */}
+        <Route
+          path="purchasing"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Purchasing />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Purchase Order route */}
+        <Route
+          path="purchase-order"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <PurchaseOrder />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Quotation route */}
+        <Route
+          path="quotation"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <Quotation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Job Scheduler route */}
+        <Route
+          path="job-scheduler"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <JobScheduler />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Service Bay route */}
+        <Route
+          path="service-bay"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <ServiceBay />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Parts Estimation route */}
+        <Route
+          path="parts-estimation"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <PartsEstimation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Photo Upload route */}
+        <Route
+          path="photo-upload"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <PhotoUpload />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Technician Tracking route */}
+        <Route
+          path="technician-tracking"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <TechnicianTracking />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Quotation Templates route */}
+        <Route
+          path="quotation-templates"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <QuotationTemplates />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Quote to Job route */}
+        <Route
+          path="quote-to-job"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <QuoteToJob />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Payment Support route */}
+        <Route
+          path="payment-support"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <PaymentSupport />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Explicit role-based dashboards */}
         {["super_admin", "admin", "manager", "branch_manager", "cashier"].map(
           (role) => (
@@ -91,6 +357,7 @@ function App() {
       {/* Global catch all fallback */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </PageProvider>
   );
 }
 

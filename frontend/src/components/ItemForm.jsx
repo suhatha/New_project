@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { FiPackage, FiDollarSign, FiBox, FiTag, FiMapPin } from 'react-icons/fi';
+import { FiPackage, FiDollarSign, FiBox, FiTag, FiMapPin, FiArrowLeft } from 'react-icons/fi';
 
-export default function ItemForm({ onSave }) {
+export default function ItemForm({ onSave, onCancel }) {
   const [form, setForm] = useState({
     itemId: '', name: '', shortName: '', expiry: '', barcode: '', mrp: '',
     cost: '', salesPrice: '', minPrice: '',
@@ -97,6 +97,29 @@ export default function ItemForm({ onSave }) {
 
   return (
     <div style={styles.container}>
+      {/* Back Button */}
+      <button
+        onClick={onCancel}
+        style={{
+          position: 'absolute',
+          top: '2rem',
+          left: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          backgroundColor: '#6b7280',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '0.9rem',
+        }}
+      >
+        <FiArrowLeft size={16} />
+        Back
+      </button>
+
       <h2 style={styles.title}>Create New Product</h2>
 
       {/* Basic Information */}
@@ -145,10 +168,7 @@ export default function ItemForm({ onSave }) {
           {['category', 'type', 'supplier', 'company', 'unit'].map(f => (
             <div key={f} style={styles.formGroup}>
               <label style={styles.label}>{capitalize(f)}</label>
-              <div style={styles.inputWithButton}>
-                <input name={f} value={form[f]} onChange={handle} style={styles.input} />
-                <button type="button" style={styles.addButton} onClick={() => addNew(f)}>+</button>
-              </div>
+              <input name={f} value={form[f]} onChange={handle} style={styles.input} />
             </div>
           ))}
         </div>
@@ -160,10 +180,7 @@ export default function ItemForm({ onSave }) {
         <div style={styles.grid}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Store Location</label>
-            <div style={styles.inputWithButton}>
-              <input name="storeLocation" value={form.storeLocation} onChange={handle} style={styles.input} />
-              <button type="button" style={styles.addButton} onClick={() => addNew('storeLocation')}>+</button>
-            </div>
+            <input name="storeLocation" value={form.storeLocation} onChange={handle} style={styles.input} />
           </div>
           {['cabinet', 'row'].map(f => (
             <div key={f} style={styles.formGroup}>
@@ -174,15 +191,37 @@ export default function ItemForm({ onSave }) {
         </div>
       </div>
 
-      <button
-        style={styles.saveButton}
-        onClick={(e) => {
-          e.preventDefault();
-          onSave(form);
-        }}
-      >
-        Save
-      </button>
+      {/* Action Buttons */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '1rem',
+        marginTop: '2rem'
+      }}>
+        <button
+          style={{
+            ...styles.saveButton,
+            backgroundColor: '#10b981',
+            margin: '0'
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            onSave(form);
+          }}
+        >
+          Save
+        </button>
+        <button
+          style={{
+            ...styles.saveButton,
+            backgroundColor: '#6b7280',
+            margin: '0'
+          }}
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
