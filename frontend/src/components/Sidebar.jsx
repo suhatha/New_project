@@ -73,6 +73,7 @@ const Sidebar = () => {
   const [hrPayrollOpen, setHrPayrollOpen] = useState(false);
   const [multiBranchOpen, setMultiBranchOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [userManagementOpen, setUserManagementOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -138,6 +139,25 @@ const Sidebar = () => {
 
             {/* II. Branch Management */}
             {navItem(FaBuilding, "Branch Management", "/branch-management")}
+
+            {/* User Management Dropdown */}
+            {hasFullAccess && (
+              <li>
+                <button onClick={() => setUserManagementOpen(!userManagementOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
+                  <div className="flex items-center gap-3">
+                    <FaUsersCog />
+                    <span>User Management</span>
+                  </div>
+                  <span>{userManagementOpen ? "▲" : "▼"}</span>
+                </button>
+                {userManagementOpen && (
+                  <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
+                    {navItem(FaUsers, "Users", "/users")}
+                    {navItem(FaUserShield, "Roles", "/roles")}
+                  </ul>
+                )}
+              </li>
+            )}
 
             {/* III. Inventory */}
             <li>

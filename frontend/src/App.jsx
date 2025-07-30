@@ -49,6 +49,9 @@ import BranchLocations from "./components/BranchLocations";
 import OwnerDashboard from "./components/OwnerDashboard";
 import CloudHosting from "./components/CloudHosting";
 import { PageProvider } from "./context/PageContext";
+import UserManagement from "./components/UserManagement";
+import RoleManagement from "./components/RoleManagement";
+
 
 function ItemFormWrapper() {
   const navigate = useNavigate();
@@ -350,6 +353,15 @@ function App() {
           }
         />
 
+        {/* User Management route */}
+        <Route
+          path="users"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
         {/* Vehicle Profiles route */}
         <Route
           path="vehicle-profiles"
@@ -359,7 +371,15 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        {/* Role Management route */}
+        <Route
+          path="roles"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
+              <RoleManagement />
+            </ProtectedRoute>
+          }
+        />
         {/* Insurance Warranty route */}
         <Route
           path="insurance-warranty"
