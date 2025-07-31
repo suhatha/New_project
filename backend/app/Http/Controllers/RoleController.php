@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -14,6 +15,22 @@ class RoleController extends Controller
             'message' => 'Roles retrieved successfully!',
             'roles' => $roles,
         ]);
+    }
+
+    public function show($id)
+    {
+        try {
+            $role = Role::findOrFail($id);
+            
+            return response()->json([
+                'message' => 'Role retrieved successfully!',
+                'role' => $role,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Role not found.',
+            ], 404);
+        }
     }
 
     public function store(Request $request)

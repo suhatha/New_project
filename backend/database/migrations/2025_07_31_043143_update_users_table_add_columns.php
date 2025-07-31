@@ -12,7 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('branch_id')->nullable()->constrained('branches')->onDelete('set null');
+            $table->string('name')->nullable();
+            $table->string('email')->unique()->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password')->nullable();
+            $table->unsignedBigInteger('role_id')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->rememberToken();
         });
     }
 
@@ -22,8 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['branch_id']);
-            $table->dropColumn('branch_id');
+            //
         });
     }
 };

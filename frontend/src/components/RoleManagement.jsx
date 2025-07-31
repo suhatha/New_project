@@ -3,48 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { FaEdit, FaKey, FaTrash, FaLock } from "react-icons/fa";
 import axios from 'axios';
 
-function getRolesFromStorage() {
-  const data = localStorage.getItem("roles");
-  return data ? JSON.parse(data) : [];
-}
-
-function saveRolesToStorage(roles) {
-  localStorage.setItem("roles", JSON.stringify(roles));
-}
-
-function getRolePermissionsFromStorage() {
-  const data = localStorage.getItem("rolePermissions");
-  return data ? JSON.parse(data) : {};
-}
-
-// Function to count permissions for a specific role
-function countRolePermissions(roleId) {
-  // Get the role to check if it's admin
-  const roles = getRolesFromStorage();
-  const role = roles.find(r => r.id == roleId);
-  
-  // If it's admin role, return "All Access" instead of counting
-  if (role && role.name === 'admin') {
-    return 'All Access';
-  }
-  
-  const allPermissions = getRolePermissionsFromStorage();
-  const rolePermissions = allPermissions[roleId] || {};
-  
-  let totalPermissions = 0;
-  Object.values(rolePermissions).forEach(permissionSet => {
-    if (typeof permissionSet === 'object' && permissionSet !== null) {
-      const permissionCount = Object.keys(permissionSet).length;
-      totalPermissions += permissionCount;
-    }
-  });
-  
-  return totalPermissions;
-}
-
 export default function RoleManagement() {
   const navigate = useNavigate();
   const [roles, setRoles] = useState([]);
+  const [rolePermissions, setRolePermissions] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
   const [form, setForm] = useState({
     name: "",
@@ -54,46 +16,83 @@ export default function RoleManagement() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
+
+  // Function to count permissions for a specific role
+  const countRolePermissions = (roleId, roles, rolePermissions) => {
+    const role = roles.find(r => r.id == roleId);
+    
+    if (role && (
+      role.name === 'super_admin' || 
+      role.name === 'Superadmin' || 
+      role.name === 'superadmin' ||
+      role.name === 'admin'
+    )) {
+      return 'Full Access';
+    }
+    
+    return rolePermissions[roleId] || 0;
+  };
+
+  // Function to fetch permissions for all roles
+  const fetchRolePermissions = async (roles) => {
+    const permissions = {};
+    
+    for (const role of roles) {
+      if (role.name === 'admin' || role.name === 'Superadmin' || role.name === 'superadmin' || role.name === 'super_admin') {
+        permissions[role.id] = 'Full Access';
+        continue;
+      }
+      
+      try {
+        const testResponse = await axios.get(`http://localhost:8000/api/test/role-permissions/${role.id}`);
+        permissions[role.id] = testResponse.data.permission_count || 0;
+      } catch (error) {
+        permissions[role.id] = 0;
+      }
+    }
+    
+    setRolePermissions(permissions);
+    setPermissionsLoaded(true);
+  };
+
+  // Function to manually refresh permissions
+  const refreshPermissions = async () => {
+    if (roles.length > 0) {
+      await fetchRolePermissions(roles);
+      setMessage("Permissions refreshed successfully!");
+    }
+  };
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        // Try to fetch roles from API first
         const response = await axios.get('http://localhost:8000/api/roles');
-        console.log('Fetched roles from API:', response.data);
-        
         if (response.data.roles) {
           setRoles(response.data.roles);
-        } else {
-          // Fallback to localStorage if API doesn't return roles
-          let rolesFromStorage = getRolesFromStorage();
-          setRoles(rolesFromStorage);
         }
         
-        // Get current user from localStorage
         const user = JSON.parse(localStorage.getItem("user"));
         setCurrentUser(user);
       } catch (error) {
         console.error('Error fetching roles from API:', error);
-        // Fallback to localStorage
-        try {
-          let rolesFromStorage = getRolesFromStorage();
-          setRoles(rolesFromStorage);
-          
-          const user = JSON.parse(localStorage.getItem("user"));
-          setCurrentUser(user);
-        } catch (err) {
-          setError("Failed to load roles");
-        }
+        setError("Failed to load roles");
       }
     };
 
     fetchRoles();
   }, []);
 
+  // Separate useEffect to handle permission fetching when roles change
+  useEffect(() => {
+    if (roles.length > 0) {
+      fetchRolePermissions(roles);
+    }
+  }, [roles]);
+
   useEffect(() => {
     try {
-      saveRolesToStorage(roles);
+      localStorage.setItem("roles", JSON.stringify(roles));
     } catch (err) {
       console.error("Error saving roles:", err);
     }
@@ -124,46 +123,29 @@ export default function RoleManagement() {
 
     try {
       if (editingId) {
-        // Edit role using API
-        console.log('Updating role with ID:', editingId);
-        
         const response = await axios.put(`http://localhost:8000/api/roles/${editingId}`, {
           name: form.name,
           description: form.description
         });
         
-        console.log('Update API Response:', response.data);
+        const refreshResponse = await axios.get('http://localhost:8000/api/roles');
+        if (refreshResponse.data.roles) {
+          setRoles(refreshResponse.data.roles);
+        }
         
-        // Update local state
-        setRoles(roles.map(r => 
-          r.id === editingId 
-            ? { ...form, id: editingId }
-            : r
-        ));
         setEditingId(null);
         setMessage(response.data.message || "Role updated successfully!");
       } else {
-        // Add role using API
-        console.log('Sending role data to API:', {
-          name: form.name,
-          description: form.description
-        });
-        
         const response = await axios.post('http://localhost:8000/api/roles', {
           name: form.name,
           description: form.description
         });
         
-        console.log('API Response:', response.data);
+        const refreshResponse = await axios.get('http://localhost:8000/api/roles');
+        if (refreshResponse.data.roles) {
+          setRoles(refreshResponse.data.roles);
+        }
         
-        // Add the new role to local state
-        const newRole = {
-          id: response.data.role.id || Date.now(),
-          name: form.name,
-          description: form.description
-        };
-        
-        setRoles([...roles, newRole]);
         setMessage(response.data.message || "Role added successfully!");
       }
       
@@ -191,12 +173,13 @@ export default function RoleManagement() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this role?")) {
       try {
-        // Delete from API
         await axios.delete(`http://localhost:8000/api/roles/${id}`);
-        console.log('Role deleted from API successfully');
         
-        // Update frontend state
-        setRoles(roles.filter(r => r.id !== id));
+        const refreshResponse = await axios.get('http://localhost:8000/api/roles');
+        if (refreshResponse.data.roles) {
+          setRoles(refreshResponse.data.roles);
+        }
+        
         setMessage("Role deleted successfully!");
         
         if (editingId === id) {
@@ -207,7 +190,6 @@ export default function RoleManagement() {
           setEditingId(null);
         }
         
-        // Clear success message after 3 seconds
         setTimeout(() => {
           setMessage("");
         }, 3000);
@@ -231,13 +213,10 @@ export default function RoleManagement() {
     navigate(`/role-permissions/${roleId}`);
   };
 
-  // Check if actions should be disabled for a role
   const isActionDisabled = (role) => {
-    // Disable actions for admin role (protect it from deletion/editing)
-    if (role.name === 'admin') {
+    if (role.name === 'super_admin' || role.name === 'Superadmin' || role.name === 'superadmin' || role.name === 'admin') {
       return true;
     }
-    
     return false;
   };
 
@@ -245,6 +224,17 @@ export default function RoleManagement() {
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg mt-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-blue-700">Role Management</h2>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={refreshPermissions}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh Permissions
+          </button>
+          {!permissionsLoaded && roles.length > 0 && (
+            <span className="text-sm text-gray-600">Loading permissions...</span>
+          )}
+        </div>
       </div>
       
       {message && (
@@ -339,8 +329,8 @@ export default function RoleManagement() {
               </tr>
             ) : (
               roles.map((role) => {
-                const permissionCount = countRolePermissions(role.id);
                 const isDisabled = isActionDisabled(role);
+                const permissionCount = countRolePermissions(role.id, roles, rolePermissions);
                 
                 return (
                   <tr key={role.id} className={`border-t hover:bg-blue-50 ${isDisabled ? 'bg-gray-50' : ''}`}>
@@ -348,17 +338,19 @@ export default function RoleManagement() {
                     <td className="py-3 px-4">{role.description}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        permissionCount === 'All Access'
-                          ? 'bg-purple-100 text-purple-800'
+                        permissionCount === 'Full Access'
+                          ? 'bg-green-100 text-green-800 border border-green-300'
                           : permissionCount === 0 
-                            ? 'bg-red-100 text-red-800' 
+                            ? 'bg-gray-100 text-gray-600' 
                             : permissionCount < 10 
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-green-100 text-green-800'
                       }`}>
-                        {permissionCount === 'All Access' 
-                          ? 'All Access' 
-                          : `${permissionCount} ${permissionCount === 1 ? 'permission' : 'permissions'}`
+                        {permissionCount === 'Full Access' 
+                          ? 'Full Access' 
+                          : permissionCount === 0 
+                            ? 'No permissions' 
+                            : `${permissionCount} ${permissionCount === 1 ? 'permission' : 'permissions'}`
                         }
                       </span>
                     </td>
@@ -367,7 +359,7 @@ export default function RoleManagement() {
                         <div className="flex items-center justify-center gap-2">
                           <span className="text-gray-400 flex items-center gap-1 px-2 py-1">
                             <FaLock className="text-sm" />
-                            Current Role
+                            {(role.name === 'super_admin' || role.name === 'Superadmin' || role.name === 'superadmin') ? 'Super Admin' : 'Admin'} Role
                           </span>
                         </div>
                       ) : (
