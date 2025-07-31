@@ -9,6 +9,14 @@ Route::post('/roles', [RoleController::class, 'store']);
 Route::put('/roles/{id}', [RoleController::class, 'update']);
 Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
 
+// Test route to check if API is working
+Route::get('/test', function() {
+    return response()->json([
+        'message' => 'API is working!',
+        'timestamp' => now(),
+        'status' => 'success'
+    ]);
+});
 
 Route::post('login', [AuthController::class, 'login']);
 
@@ -26,6 +34,23 @@ Route::get('test/roles', function() {
     return response()->json([
         'roles' => $roles,
         'count' => $roles->count()
+    ]);
+});
+
+// Test route to check users
+Route::get('test/users', function() {
+    $users = \App\Models\User::with('role')->get();
+    return response()->json([
+        'users' => $users->map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role ? $user->role->name : 'No role',
+                'created_at' => $user->created_at
+            ];
+        }),
+        'count' => $users->count()
     ]);
 });
 
