@@ -51,6 +51,7 @@ import CloudHosting from "./components/CloudHosting";
 import { PageProvider } from "./context/PageContext";
 import UserManagement from "./components/UserManagement";
 import RoleManagement from "./components/RoleManagement";
+import RolePermissions from "./components/RolePermissions";
 
 
 function ItemFormWrapper() {
@@ -377,6 +378,15 @@ function App() {
           element={
             <ProtectedRoute roles={["super_admin", "admin", "manager"]}>
               <RoleManagement />
+            </ProtectedRoute>
+          }
+        />
+        {/* Role Permissions route */}
+        <Route
+          path="role-permissions/:roleId"
+          element={
+            <ProtectedRoute roles={["super_admin", "admin"]}>
+              <RolePermissions />
             </ProtectedRoute>
           }
         />
