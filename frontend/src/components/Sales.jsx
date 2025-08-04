@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { FaSearch, FaFileInvoiceDollar, FaPlus, FaFilter, FaSync, FaDownload, FaPrint, FaEdit, FaTrash, FaChevronDown } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const Sales = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [salesEntries, setSalesEntries] = useState([
+  const initialSalesEntries = [
     {
       id: 1,
       type: 'Sale',
@@ -15,7 +18,8 @@ const Sales = () => {
       payment: 'cash',
       status: 'Paid'
     }
-  ]);
+  ];
+  const [salesEntries, setSalesEntries] = useState(initialSalesEntries);
 
   // Mock data for KPI calculations
   const totalEntries = salesEntries.length;
@@ -28,11 +32,13 @@ const Sales = () => {
   };
 
   const handleCreateQuotation = () => {
-    alert('Create Quotation functionality - This would open a quotation form');
+    navigate('/quotation');
   };
 
   const handleCreateSalesEntry = () => {
-    alert('Create Sales Entry functionality - This would open a sales entry form');
+    // If you have a sales entry page, navigate to it. Otherwise, show a modal.
+    // For now, we'll navigate to /sales-entry if it exists.
+    navigate('/sales-entry');
   };
 
   const handleShowFilters = () => {
@@ -40,13 +46,16 @@ const Sales = () => {
   };
 
   const handleRefresh = () => {
-    alert('Refreshing sales data...');
-    // In a real app, this would fetch fresh data from the server
+    setSalesEntries(initialSalesEntries);
   };
 
   const handleExport = () => {
-    alert('Exporting sales data to Excel/PDF...');
-    // In a real app, this would generate and download a report
+    // Export salesEntries to XLSX
+    const dataToExport = salesEntries.map(({ id, ...rest }) => rest);
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales');
+    XLSX.writeFile(workbook, 'sales_data.xlsx');
   };
 
   const handlePrint = (entryId) => {

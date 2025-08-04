@@ -410,66 +410,70 @@ const JobScheduler = () => {
 
         {/* Add/Edit Appointment Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                {editingAppointment ? 'Edit Appointment' : 'Add New Appointment'}
-              </h3>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {editingAppointment ? 'Edit Appointment' : 'Add New Appointment'}
+                </h3>
+              </div>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
-                  <input
-                    type="text"
-                    name="customerName"
-                    value={newAppointment.customerName}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Number *</label>
-                  <input
-                    type="text"
-                    name="vehicleNumber"
-                    value={newAppointment.vehicleNumber}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Type *</label>
-                  <select
-                    name="serviceType"
-                    value={newAppointment.serviceType}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select Service Type</option>
-                    {serviceTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Technician</label>
-                  <select
-                    name="technician"
-                    value={newAppointment.technician}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select Technician</option>
-                    {technicians.map(tech => (
-                      <option key={tech} value={tech}>{tech}</option>
-                    ))}
-                  </select>
-                </div>
-
+              {/* Modal Body - Scrollable */}
+              <div className="p-6 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                    <input
+                      type="text"
+                      name="customerName"
+                      value={newAppointment.customerName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Number *</label>
+                    <input
+                      type="text"
+                      name="vehicleNumber"
+                      value={newAppointment.vehicleNumber}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Service Type *</label>
+                    <select
+                      name="serviceType"
+                      value={newAppointment.serviceType}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select Service Type</option>
+                      {serviceTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Technician</label>
+                    <select
+                      name="technician"
+                      value={newAppointment.technician}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select Technician</option>
+                      {technicians.map(tech => (
+                        <option key={tech} value={tech}>{tech}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
                     <select
@@ -484,6 +488,7 @@ const JobScheduler = () => {
                       ))}
                     </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
                     <select
@@ -498,9 +503,7 @@ const JobScheduler = () => {
                       ))}
                     </select>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Bay</label>
                     <select
@@ -515,6 +518,7 @@ const JobScheduler = () => {
                       ))}
                     </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
                     <select
@@ -530,45 +534,50 @@ const JobScheduler = () => {
                   </div>
                 </div>
 
-                <div>
+                <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
                   <textarea
                     name="notes"
                     value={newAppointment.notes}
                     onChange={handleInputChange}
-                    rows="3"
+                    rows="2"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingAppointment(null);
-                    setNewAppointment({
-                      customerName: '',
-                      vehicleNumber: '',
-                      serviceType: '',
-                      technician: '',
-                      startTime: '',
-                      endTime: '',
-                      bay: '',
-                      priority: 'Medium',
-                      notes: ''
-                    });
-                  }}
-                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={editingAppointment ? handleUpdateAppointment : handleAddAppointment}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  {editingAppointment ? 'Update' : 'Add'} Appointment
-                </button>
+              {/* Modal Footer - Fixed at bottom */}
+              <div className="p-6 border-t border-gray-200 bg-gray-50">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setEditingAppointment(null);
+                      setNewAppointment({
+                        customerName: '',
+                        vehicleNumber: '',
+                        serviceType: '',
+                        technician: '',
+                        startTime: '',
+                        endTime: '',
+                        bay: '',
+                        priority: 'Medium',
+                        notes: ''
+                      });
+                    }}
+                    className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors flex items-center gap-2"
+                  >
+                    <FaTimes size={14} />
+                    Cancel
+                  </button>
+                  <button
+                    onClick={editingAppointment ? handleUpdateAppointment : handleAddAppointment}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <FaCheck size={14} />
+                    {editingAppointment ? 'Update' : 'Save'} Appointment
+                  </button>
+                </div>
               </div>
             </div>
           </div>

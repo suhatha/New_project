@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\ItemController;
 
 // Role routes
 Route::get('/roles', [RoleController::class, 'index']);
@@ -241,3 +242,16 @@ Route::middleware('auth:api')->group(function () {
     Route::get('cashier', fn() => response()->json(['message' => 'Cashier Dashboard']))
         ->middleware('role:cashier');
 });
+
+// Item routes
+Route::get('items', [ItemController::class, 'index']);
+Route::post('items', [ItemController::class, 'store']);
+Route::get('items/{id}', [ItemController::class, 'show']);
+Route::put('items/{id}', [ItemController::class, 'update']);
+Route::delete('items/{id}', [ItemController::class, 'destroy']);
+Route::get('items/categories/list', [ItemController::class, 'getCategories']);
+Route::get('items/suppliers/list', [ItemController::class, 'getSuppliers']);
+
+// Expiry routes
+Route::get('/expiry-items', [ExpiryItemController::class, 'index']);
+Route::post('/expiry-items', [ExpiryItemController::class, 'store']);

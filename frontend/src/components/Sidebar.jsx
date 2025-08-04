@@ -178,7 +178,7 @@ const Sidebar = () => {
                   {navItem(FaBox, "Unit", "/unit")}
                   {navItem(FaMapMarker, "Store Location", "/store-location")}
                   {navItem(FaBarcode, "Barcode", "/barcode")}
-                  {navItem(FaChartLine, "Item Age Analyze", "/item-age-analyze")}
+                  {navItem(FaChartLine, "Item Age Analysis", "/item-age-analysis")}
                 </ul>
               )}
             </li>
@@ -195,9 +195,9 @@ const Sidebar = () => {
               {salesOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaShoppingCart, "Sales", "/sales")}
-                  {navItem(FaCalculator, "Tax", "/tax")}
+                  {navItem(FaCalculator, "Tax Management", "/tax-management")}
                   {navItem(FaUndo, "Sales Return", "/sales-return")}
-                  {navItem(FaUsers, "Customers", "/customers")}
+                  {navItem(FaUsers, "Customer Management", "/customer-management")}
                   {navItem(FaFileInvoice, "Quotation", "/quotation")}
                 </ul>
               )}
@@ -216,27 +216,26 @@ const Sidebar = () => {
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaShoppingBag, "Purchasing", "/purchasing")}
                   {navItem(FaClipboardList, "Purchase Order", "/purchase-order")}
-                  {navItem(FaUndo, "Purchase Return", "/purchase-return")}
                 </ul>
               )}
             </li>
 
-            {/* VI. Job Order & Service Workflow */}
+            {/* VI. Job Order */}
             <li>
               <button onClick={() => setJobOrderOpen(!jobOrderOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
                 <div className="flex items-center gap-3">
-                  <FaClipboardList />
-                  <span>Job Order & Service Workflow</span>
+                  <FaTools />
+                  <span>Job Order</span>
                 </div>
                 <span>{jobOrderOpen ? "▲" : "▼"}</span>
               </button>
               {jobOrderOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaCalendarAlt, "Job Scheduler", "/job-scheduler")}
-                  {navItem(FaCogs, "Service Bay Assignment", "/service-bay")}
-                  {navItem(FaTools, "Parts Estimation, Labor Costing", "/parts-estimation")}
-                  {navItem(FaCamera, "Photo Upload for Damages", "/photo-upload")}
-                  {navItem(FaClock, "Technician Time Tracking", "/technician-tracking")}
+                  {navItem(FaCogs, "Service Bay", "/service-bay")}
+                  {navItem(FaTools, "Parts Estimation", "/parts-estimation")}
+                  {navItem(FaCamera, "Photo Upload", "/photo-upload")}
+                  {navItem(FaClock, "Technician Tracking", "/technician-tracking")}
                 </ul>
               )}
             </li>
@@ -253,35 +252,35 @@ const Sidebar = () => {
               {invoicingOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaFileAlt, "Quotation Templates", "/quotation-templates")}
-                  {navItem(FaExchangeAlt, "Quote to Job Orders", "/quote-to-job")}
-                  {navItem(FaCreditCard, "Multi-mode Payment Support", "/payment-support")}
+                  {navItem(FaExchangeAlt, "Quote to Job", "/quote-to-job")}
+                  {navItem(FaCreditCard, "Payment Support", "/payment-support")}
                 </ul>
               )}
             </li>
 
-            {/* VIII. Vehicle & Customer Management */}
+            {/* VIII. Vehicle & Customer */}
             <li>
               <button onClick={() => setVehicleCustomerOpen(!vehicleCustomerOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
                 <div className="flex items-center gap-3">
-                  <FaCarSide />
-                  <span>Vehicle & Customer Management</span>
+                  <FaCarAlt />
+                  <span>Vehicle & Customer</span>
                 </div>
                 <span>{vehicleCustomerOpen ? "▲" : "▼"}</span>
               </button>
               {vehicleCustomerOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaUser, "Vehicle Profiles", "/vehicle-profiles")}
-                  {navItem(FaShieldAlt, "Insurance, Warranty & Reminder Setup", "/insurance-warranty")}
+                  {navItem(FaShieldAlt, "Insurance Warranty", "/insurance-warranty")}
                 </ul>
               )}
             </li>
 
-            {/* IX. Accounting System */}
+            {/* IX. Accounting */}
             <li>
               <button onClick={() => setAccountingOpen(!accountingOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
                 <div className="flex items-center gap-3">
-                  <FaCalculator />
-                  <span>Accounting System</span>
+                  <FaMoneyBillWave />
+                  <span>Accounting</span>
                 </div>
                 <span>{accountingOpen ? "▲" : "▼"}</span>
               </button>
@@ -291,27 +290,27 @@ const Sidebar = () => {
                   {navItem(FaReceipt, "Receipt Voucher", "/receipt-voucher")}
                   {navItem(FaBook, "Ledger", "/ledger")}
                   {navItem(FaFileAlt, "Statement", "/statement")}
-                  {navItem(FaChartPie, "Profit and Loss", "/profit-loss")}
+                  {navItem(FaChartPie, "Profit Loss", "/profit-loss")}
                   {navItem(FaBalanceScale, "Balance Sheet", "/balance-sheet")}
                   {navItem(FaClipboardCheck, "Trial Balance", "/trial-balance")}
                 </ul>
               )}
             </li>
 
-            {/* X. HR & Payroll Management */}
+            {/* X. HR & Payroll */}
             <li>
               <button onClick={() => setHrPayrollOpen(!hrPayrollOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
                 <div className="flex items-center gap-3">
                   <FaUsersCog />
-                  <span>HR & Payroll Management</span>
+                  <span>HR & Payroll</span>
                 </div>
                 <span>{hrPayrollOpen ? "▲" : "▼"}</span>
               </button>
               {hrPayrollOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
-                  {navItem(FaFingerprint, "Attendance via Biometric or Mobile App", "/attendance")}
+                  {navItem(FaFingerprint, "Attendance", "/attendance")}
                   {navItem(FaCalendarAlt, "Shift Planning", "/shift-planning")}
-                  {navItem(FaMoneyBillWave, "Monthly Payroll with Advance, Loans & Deductions", "/payroll")}
+                  {navItem(FaMoneyBillWave, "Payroll", "/payroll")}
                 </ul>
               )}
             </li>
@@ -320,45 +319,49 @@ const Sidebar = () => {
             <li>
               <button onClick={() => setMultiBranchOpen(!multiBranchOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
                 <div className="flex items-center gap-3">
-                  <FaCloud />
-                  <span>Multi-Branch & Cloud Access</span>
+                  <FaNetworkWired />
+                  <span>Multi-Branch & Cloud</span>
                 </div>
                 <span>{multiBranchOpen ? "▲" : "▼"}</span>
               </button>
               {multiBranchOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
-                  {navItem(FaNetworkWired, "Manage Unlimited Locations & Franchises", "/branch-locations")}
-                  {navItem(FaTachometerAlt, "Central Dashboard for Owners", "/owner-dashboard")}
-                  {navItem(FaServer, "Cloud-based or On-Premise Hosting", "/cloud-hosting")}
+                  {navItem(FaNetworkWired, "Branch Locations", "/branch-locations")}
+                  {navItem(FaTachometerAlt, "Owner Dashboard", "/owner-dashboard")}
+                  {navItem(FaServer, "Cloud Hosting", "/cloud-hosting")}
                 </ul>
               )}
             </li>
 
-            {/* XII. Advanced Analytics & Reporting */}
+            {/* XII. Analytics */}
             <li>
               <button onClick={() => setAnalyticsOpen(!analyticsOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
                 <div className="flex items-center gap-3">
                   <FaChartBar />
-                  <span>Advanced Analytics & Reporting</span>
+                  <span>Analytics</span>
                 </div>
                 <span>{analyticsOpen ? "▲" : "▼"}</span>
               </button>
               {analyticsOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
-                  {navItem(FaTachometerAlt, "Real-Time Dashboard", "/real-time-dashboard")}
-                  {navItem(FaBoxes, "Stock & Movements Report", "/stock-movements")}
-                  {navItem(FaExclamationTriangle, "Low Stock & Fast-moving Alerts", "/stock-alerts")}
-                  {navItem(FaChartLine, "Bill-wise & Service-wise Profit Reports", "/profit-reports")}
-                  {navItem(FaCalendarAlt, "Daily, Weekly, Monthly Sales Insights", "/sales-insights")}
-                  {navItem(FaCalendarTimes, "Non-Sales Day Analysis", "/non-sales-analysis")}
-                  {navItem(FaTrash, "Recycle Bin with Audit Trail", "/recycle-bin")}
+                  {navItem(FaTachometerAlt, "Real-Time Dashboard", "/dashboard")}
+                  {navItem(FaBoxes, "Stock & Movements", "/dashboard")}
+                  {navItem(FaExclamationTriangle, "Low Stock Alerts", "/dashboard")}
+                  {navItem(FaChartLine, "Profit Reports", "/dashboard")}
+                  {navItem(FaCalendarAlt, "Sales Insights", "/dashboard")}
+                  {navItem(FaCalendarTimes, "Non-Sales Analysis", "/dashboard")}
+                  {navItem(FaTrash, "Recycle Bin", "/dashboard")}
                 </ul>
               )}
             </li>
 
-            {/* Settings & Logout - all roles */}
-            {navItem(FaCogs, "Settings", "/settings")}
-            {navItem(FaSignOutAlt, "Logout", "/logout")}
+            {/* XIII. Settings & Logout */}
+            <li className="pt-4 border-t border-white/20">
+              <div className="space-y-2">
+                {navItem(FaCogs, "Settings", "/dashboard")}
+                {navItem(FaSignOutAlt, "Logout", "/logout")}
+              </div>
+            </li>
           </ul>
         </div>
       </div>
