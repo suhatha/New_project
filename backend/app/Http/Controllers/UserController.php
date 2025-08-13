@@ -16,8 +16,7 @@ class UserController extends Controller
     public function index()
     {
         try {
-            $users = User::with(['role'
-            ])->get();
+            $users = User::with(['role', 'branch'])->get();
             
             // Transform data for frontend
             $transformedUsers = $users->map(function ($user) {
@@ -29,6 +28,8 @@ class UserController extends Controller
                     'role' => $user->role->name ?? 'No Role',
                     'role_id' => $user->role_id,
                     'status' => $user->status,
+                    'branch' => $user->branch->name ?? 'No Branch',
+                    'branch_id' => $user->branch_id,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ];
@@ -57,7 +58,8 @@ class UserController extends Controller
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:6',
                 'role_id' => 'required|exists:roles,id',
-                'status' => 'required|in:active,inactive'
+                'status' => 'required|in:active,inactive',
+                'branch_id' => 'nullable|exists:branches,id',
             ]);
 
             if ($validator->fails()) {
@@ -67,15 +69,21 @@ class UserController extends Controller
                 ], 422);
             }
 
-            $user = User::create([
+            $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role_id' => $request->role_id,
-                'status' => $request->status
-            ]);
+                'status' => $request->status,
+            ];
 
-            $user->load(['role']);
+            // Only set branch_id if it's provided and not null
+            if ($request->has('branch_id') && $request->branch_id !== null) {
+                $userData['branch_id'] = $request->branch_id;
+            }
+
+            $user = User::create($userData);
+            $user->load(['role', 'branch']);
 
             return response()->json([
                 'message' => 'User created successfully!',
@@ -87,6 +95,8 @@ class UserController extends Controller
                     'role' => $user->role->name ?? 'No Role',
                     'role_id' => $user->role_id,
                     'status' => $user->status,
+                    'branch_id' => $user->branch_id,
+                    'branch' => $user->branch->name ?? 'No Branch',
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ]
@@ -103,7 +113,8 @@ class UserController extends Controller
                         'email' => 'required|email|unique:users,email',
                         'password' => 'required|string|min:6',
                         'role_id' => 'required|exists:roles,id',
-                        'status' => 'required|in:active,inactive'
+                        'status' => 'required|in:active,inactive',
+                        'branch_id' => 'nullable|exists:branches,id', // validate the branch_id
                     ]
                 ]
             ], 500);
@@ -116,7 +127,7 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            $user = User::with(['role'])->findOrFail($id);
+            $user = User::with(['role', 'branch'])->findOrFail($id);
             
             return response()->json([
                 'message' => 'User retrieved successfully!',
@@ -128,6 +139,8 @@ class UserController extends Controller
                     'role' => $user->role->name ?? 'No Role',
                     'role_id' => $user->role_id,
                     'status' => $user->status,
+                    'branch_id' => $user->branch_id,
+                    'branch' => $user->branch->name ?? 'No Branch',
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ]
@@ -153,7 +166,8 @@ class UserController extends Controller
                 'email' => 'required|email|unique:users,email,' . $id,
                 'password' => 'nullable|string|min:6',
                 'role_id' => 'required|exists:roles,id',
-                'status' => 'required|in:active,inactive'
+                'status' => 'required|in:active,inactive',
+                'branch_id' => 'required|exists:branches,id', // branch_id is now required
             ]);
 
             if ($validator->fails()) {
@@ -167,8 +181,14 @@ class UserController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'role_id' => $request->role_id,
-                'status' => $request->status
+                'status' => $request->status,
+                'branch_id' => $request->branch_id,
             ];
+
+            // Only update branch_id if it's provided
+            if ($request->has('branch_id')) {
+                $updateData['branch_id'] = $request->branch_id;
+            }
 
             // Only update password if provided
             if ($request->filled('password')) {
@@ -176,7 +196,7 @@ class UserController extends Controller
             }
 
             $user->update($updateData);
-            $user->load(['role']);
+            $user->load(['role', 'branch']);
 
             return response()->json([
                 'message' => 'User updated successfully!',
@@ -188,6 +208,8 @@ class UserController extends Controller
                     'role' => $user->role->name ?? 'No Role',
                     'role_id' => $user->role_id,
                     'status' => $user->status,
+                    'branch_id' => $user->branch_id,
+                    'branch' => $user->branch->name ?? 'No Branch',
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ]
@@ -248,6 +270,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
 
 } 

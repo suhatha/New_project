@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { getApiUrl, getAuthHeaders } from "../config/api";
 
+// --- Add branch fetching ---
+
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [branches, setBranches] = useState([]); // <-- NEW
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [form, setForm] = useState({ 
-    name: "", 
-    email: "", 
-    password: "", 
-    confirmPassword: "",
-    role_id: "", 
-    status: "active"
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role_id: roles.length > 0 ? roles[0].id : '',
+    branch_id: branches.length > 0 ? branches[0].id : '',
+    status: 'active',
   });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("inactive"); // default status
+
 
   // API helper function
   const apiCall = async (endpoint, options = {}) => {
@@ -48,8 +54,10 @@ export default function UserManagement() {
     try {
       setLoading(true);
       const data = await apiCall('/users');
+      console.log('Users API Response:', data); // Debug log
       setUsers(data.users || []);
     } catch (error) {
+      console.error('Error fetching users:', error);
       setError('Failed to fetch users: ' + error.message);
     } finally {
       setLoading(false);
@@ -66,21 +74,56 @@ export default function UserManagement() {
     }
   };
 
+  // Fetch branches from backend
+  const fetchBranches = async () => {
+    try {
+      const response = await fetch(getApiUrl('/branches'), {
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      console.log('Branches API Response:', data); // Debug log
+      const branchesData = Array.isArray(data) ? data : (data.branches || []);
+      console.log('Setting branches:', branchesData); // Debug log
+      setBranches(branchesData);
+      
+      // If no branch is selected, set the first one as default
+      if (branchesData.length > 0 && !form.branch_id) {
+        console.log('Setting default branch:', branchesData[0].id); // Debug log
+        setForm(prev => ({ ...prev, branch_id: branchesData[0].id }));
+      }
+    } catch (error) {
+      setError('Failed to fetch branches: ' + error.message);
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     fetchUsers();
     fetchRoles();
+    fetchBranches();
   }, []);
 
-  // Update form role_id when roles change
+  // Update form role_id and branch_id when roles or branches change
   useEffect(() => {
-    if (roles.length > 0 && !form.role_id) {
-      setForm(prev => ({ ...prev, role_id: roles[0].id }));
+    const updates = {};
+    if (roles.length > 0 && !roles.some(role => role.id.toString() === form.role_id?.toString())) {
+      updates.role_id = roles[0].id;
     }
-  }, [roles, form.role_id]);
+    if (branches.length > 0 && !branches.some(branch => branch.id.toString() === form.branch_id?.toString())) {
+      updates.branch_id = branches[0].id;
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      setForm(prev => ({ ...prev, ...updates }));
+    }
+  }, [roles, branches, form.role_id, form.branch_id]);
+
+  // This effect is no longer needed as we handle both role_id and branch_id in the effect above
+  // Removed duplicate effect that was causing issues
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    setForm({ ...form, [e.target.name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -89,8 +132,8 @@ export default function UserManagement() {
     setLoading(true);
     
     // Validation
-    if (!form.name.trim() || !form.email.trim() || !form.role_id) {
-      setError("Name, Email, and Role are required.");
+    if (!form.name.trim() || !form.email.trim() || !form.role_id || !form.branch_id) {
+      setError("Name, Email, Role, and Branch are required.");
       setLoading(false);
       return;
     }
@@ -124,8 +167,12 @@ export default function UserManagement() {
         name: form.name,
         email: form.email,
         role_id: form.role_id,
+        branch_id: form.branch_id,
         status: form.status
       };
+
+      console.log('Form data before submission:', form);
+      console.log('User data being sent:', userData);
 
       // Only include password if provided
       if (form.password) {
@@ -173,13 +220,15 @@ export default function UserManagement() {
   };
 
   const handleEdit = (user) => {
+    console.log('Editing user:', user); // Debug log
     setForm({
       name: user.name,
       email: user.email,
       password: "",
       confirmPassword: "",
-      role_id: user.role_id,
-      status: user.status
+      role_id: user.role_id || (roles.length > 0 ? roles[0].id : ''),
+      branch_id: user.branch_id || (branches.length > 0 ? branches[0].id : ''),
+      status: user.status || 'active'
     });
     setEditingId(user.id);
     setShowAddDialog(true);
@@ -220,7 +269,8 @@ export default function UserManagement() {
       password: "", 
       confirmPassword: "",
       role_id: "", 
-      status: "active"
+      branch_id: branches[0]?.id || "", // <-- NEW
+      status: 'active' // default to 'active' as string
     });
     setEditingId(null);
     setError("");
@@ -282,6 +332,7 @@ export default function UserManagement() {
               <th className="py-3 px-4 text-left font-semibold text-gray-700">Email</th>
               <th className="py-3 px-4 text-left font-semibold text-gray-700">Password</th>
               <th className="py-3 px-4 text-left font-semibold text-gray-700">Role</th>
+              <th className="py-3 px-4 text-left font-semibold text-gray-700">Branch</th>
               <th className="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
               <th className="py-3 px-4 text-center font-semibold text-gray-700">Actions</th>
             </tr>
@@ -289,11 +340,11 @@ export default function UserManagement() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center py-6 text-gray-500">Loading users...</td>
+                <td colSpan={7} className="text-center py-6 text-gray-500">Loading users...</td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-6 text-gray-500">No users found.</td>
+                <td colSpan={7} className="text-center py-6 text-gray-500">No users found.</td>
               </tr>
             ) : (
               users.map((user) => (
@@ -309,10 +360,13 @@ export default function UserManagement() {
                     {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'No Role'}
                   </td>
                   <td className="py-3 px-4">
+                    {user.branch || 'N/A'}
+                  </td>
+                  <td className="py-3 px-4">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      user.status === "active" ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {user.status || 'active'}
+                      {user.status === "active" ? 'active' : 'inactive'}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -340,11 +394,19 @@ export default function UserManagement() {
 
       {/* Add/Edit User Dialog */}
       {showAddDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingId !== null ? "Edit User" : "Add New User"}
-            </h3>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-2 p-6 animate-fadeIn max-h-[90vh] overflow-y-auto">
+      <button
+        onClick={handleCancel}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none"
+        aria-label="Close"
+        type="button"
+      >
+        &times;
+      </button>
+      <h3 className="text-lg font-semibold mb-4 text-center">
+        {editingId !== null ? "Edit User" : "Add New User"}
+      </h3>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -421,41 +483,63 @@ export default function UserManagement() {
                   ))}
                 </select>
               </div>
-              
+
+              {/* Branch selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+                {branches.length === 0 ? (
+                  <div className="text-sm text-red-600 mb-2">No branches available. Please create branches first.</div>
+                ) : null}
                 <select
-                  name="status"
-                  value={form.status}
+                  name="branch_id"
+                  value={form.branch_id || ''}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-lg"
                   required
-                  disabled={loading}
+                  disabled={loading || branches.length === 0}
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
+                  <option value="">Select a branch</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+  </select>
+</div>
 
-              {error && <div className="text-red-600 text-sm">{error}</div>}
-              
-              <div className="flex gap-3 pt-4">
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {loading ? 'Saving...' : (editingId !== null ? "Update User" : "Create User")}
-                </button>
-                <button 
-                  type="button" 
-                  onClick={handleCancel}
-                  disabled={loading}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+  <button
+    type="button"
+    onClick={() => setForm(prev => ({ ...prev, status: prev.status === "active" ? "inactive" : "active" }))}
+    className={`flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 border focus:outline-none ${form.status === "active" ? 'bg-green-500 border-green-600' : 'bg-white border-gray-300'}`}
+    disabled={loading}
+    style={{ width: '48px', height: '24px', minHeight: 'unset' }}
+  >
+    <span className={`w-full h-full flex items-center transition-colors duration-200 ${form.status === "active" ? 'bg-green-400' : 'bg-gray-200'} rounded-full p-1`}>
+      <span className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${form.status === "active" ? 'translate-x-6' : ''}`}></span>
+    </span>
+  </button>
+</div>
+
+{error && <div className="text-red-600 text-sm">{error}</div>}
+<div className="flex gap-3 pt-4">
+  <button 
+    type="submit" 
+    disabled={loading}
+    className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+  >
+    {loading ? 'Saving...' : (editingId !== null ? "Update User" : "Create User")}
+  </button>
+  <button 
+    type="button" 
+    onClick={handleCancel}
+    disabled={loading}
+    className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+  >
+    Cancel
+  </button>
+</div>
             </form>
           </div>
         </div>

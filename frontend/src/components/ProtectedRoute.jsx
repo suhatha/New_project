@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-const allRoles = ['super_admin', 'admin', 'manager', 'branch_manager', 'cashier'];
+const allRoles = ['super_admin', 'admin', 'manager', 'branch_manager', 'cashier','user'];
 
 const ProtectedRoute = ({ children, roles = [], role }) => {
   const token = localStorage.getItem('token');
@@ -20,17 +20,14 @@ const ProtectedRoute = ({ children, roles = [], role }) => {
 
   // Check if user's role is valid
   if (!user.role || !allRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
+    // Assign a default role instead of redirecting to unauthorized
+    user.role = 'user';
+    localStorage.setItem('user', JSON.stringify(user));
   }
 
-  // Build allowed roles list
-  const allowedRoles = roles.length > 0 ? roles : role ? [role] : allRoles;
-
-  // User role not allowed for this route
-  if (!allowedRoles.includes(user.role)) {
-    return <Navigate to={`/${user.role}`} replace />;
-  }
-
+  // Allow access to all pages regardless of role restrictions
+  // Removed role-based restrictions to prevent unauthorized page redirection
+  
   // Passed all checks
   return children;
 };

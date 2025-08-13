@@ -10,7 +10,8 @@ class User extends Authenticatable implements JWTSubject
         'email', 
         'password', 
         'role_id', 
-        'status'
+        'status',
+        'branch_id'
     ];
     
     protected $hidden = ['password', 'remember_token'];
@@ -29,8 +30,14 @@ class User extends Authenticatable implements JWTSubject
     
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id', 'id');
+    }
+    
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
     
 
+   
 }

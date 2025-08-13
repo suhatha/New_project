@@ -102,6 +102,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { updateCurrentPage } = usePageContext();
   const [role, setRole] = useState("");
+  const [permissions, setPermissions] = useState([]); // <-- FIX: add permissions state
 
   // Dropdown states
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -115,17 +116,36 @@ const Sidebar = () => {
   const [multiBranchOpen, setMultiBranchOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [userManagementOpen, setUserManagementOpen] = useState(false);
+  // DEBUG: Add a test button to verify state
+  // Remove after debugging
+  // <button onClick={() => setUserManagementOpen(!userManagementOpen)}>Toggle User Management (debug)</button>
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     setRole(storedUser?.role || "guest");
+    // Fetch permissions for the current user's role_id
+    if (storedUser?.role_id) {
+      import('axios').then(({default: axios}) => {
+        axios.get(`http://localhost:8000/api/role-permissions/${storedUser.role_id}`)
+          .then(res => setPermissions(res.data.current_permissions || []))
+          .catch(() => setPermissions([]));
+      });
+    }
   }, []);
 
-  const hasFullAccess = ["super_admin", "admin", "manager"].includes(role);
+  // Step 2: canView helper
+  const canView = (moduleName) => {
+    const norm = (s) => s?.toString().toLowerCase().trim();
+    const perm = permissions.find(p => norm(p.module_name) === norm(moduleName));
+    return perm?.can_view;
+  };
+
+  const hasFullAccess = ["super_admin", "admin", "manager", "user"].includes(role);
 
   const navItem = (Icon, label, path) => (
     <li
       key={label}
+
       className="group"
     >
       <div
@@ -142,6 +162,7 @@ const Sidebar = () => {
         <Icon className="w-5 h-5 flex-shrink-0 text-blue-300 group-hover:text-white transition-colors" />
         <span className="font-medium text-sm text-gray-200 group-hover:text-white transition-colors">{label}</span>
       </div>
+
     </li>
   );
 
@@ -157,10 +178,12 @@ const Sidebar = () => {
   };
 
   return (
+
     <ErrorBoundary>
     <nav className="w-64 h-screen text-white relative flex flex-col shadow-xl select-none bg-gray-900">
       <div className="flex flex-col h-full">
         {/* Branding Area - Improved */}
+
         <div
           className="flex items-center justify-start p-4 bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
           onClick={() => navigate("/dashboard")}
@@ -186,49 +209,34 @@ const Sidebar = () => {
         <div className="flex-grow bg-gray-800 p-4 overflow-y-auto">
           <ul className="space-y-2">
             {/* I. Dashboard */}
+            {/* I. Dashboard */}
             {navItem(FaTachometerAlt, "Dashboard", "/dashboard")}
 
             {/* II. Branch Management */}
             {navItem(FaBuilding, "Branch Management", "/branch-management")}
 
-            {/* User Management Dropdown */}
-            {hasFullAccess && (
-              <li className="mb-2">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setUserManagementOpen(!userManagementOpen);
-                  }} 
-                  className="flex items-center justify-between w-full px-4 py-3 rounded-md hover:bg-blue-600 hover:text-white transition-colors duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <FaUsersCog className="w-5 h-5 text-blue-300" />
-                    <span className="font-medium text-sm">User Management</span>
-                  </div>
-                  <span className={`transition-transform duration-200 ${userManagementOpen ? 'rotate-180' : ''}`}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </span>
-                </button>
-                {userManagementOpen && (
-                  <ul className="pl-8 py-2 space-y-1 mt-1 border-l-2 border-blue-500/20 ml-4">
-                    {navItem(FaUsers, "Users", "/users")}
-                    {navItem(FaUserShield, "Roles", "/roles")}
-                  </ul>
-                )}
-              </li>
-            )}
 
-            {/* III. Inventory */}
-            <li className="mb-2">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setInventoryOpen(!inventoryOpen);
-                }}
-                className="flex items-center justify-between w-full px-4 py-3 rounded-md hover:bg-blue-600 hover:text-white transition-colors duration-200"
-              >
+            {/* III. User Management Dropdown */}
+            <li>
+              <button onClick={() => setUserManagementOpen(!userManagementOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
+                <div className="flex items-center gap-3">
+                  <FaUsersCog />
+                  <span>User Management</span>
+                </div>
+                <span>{userManagementOpen ? "▲" : "▼"}</span>
+              </button>
+              {userManagementOpen && (
+                <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
+                  {navItem(FaUsers, "Users", "/users")}
+                  {navItem(FaUserShield, "Roles", "/roles")}
+                </ul>
+              )}
+            </li>
+
+            {/* IV. Inventory */}
+            <li>
+              <button onClick={() => setInventoryOpen(!inventoryOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
+
                 <div className="flex items-center gap-3">
                   <FaBox className="w-5 h-5 text-blue-300" />
                   <span className="font-medium text-sm">Inventory</span>
@@ -240,6 +248,7 @@ const Sidebar = () => {
                 </span>
               </button>
               {inventoryOpen && (
+
                 <ul className="pl-8 py-2 space-y-1 mt-1 border-l-2 border-blue-500/20 ml-4">
                   {navItem(FaCube, "Items", "/item")}
                   {navItem(FaCalendar, "Expiry Tracking", "/expiry")}
@@ -250,8 +259,10 @@ const Sidebar = () => {
                   {navItem(FaMapMarker, "Store Locations", "/store-location")}
                   {navItem(FaBarcode, "Barcodes", "/barcode")}
                   {navItem(FaChartLine, "Item Age Analysis", "/item-age-analysis")}
+
                 </ul>
               )}
+            
             </li>
 
             {/* IV. Sales */}
@@ -335,10 +346,13 @@ const Sidebar = () => {
               {jobOrderOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaCalendarAlt, "Job Scheduler", "/job-scheduler")}
-                  {navItem(FaCogs, "Service Bay", "/service-bay")}
-                  {navItem(FaTools, "Parts Estimation", "/parts-estimation")}
-                  {navItem(FaCamera, "Photo Upload", "/photo-upload")}
-                  {navItem(FaClock, "Technician Tracking", "/technician-tracking")}
+
+                  {navItem(FaTools, "Service Workflow", "/service-workflow")}
+                  {navItem(FaCogs, "Service Bay Assignment", "/service-bay")}
+                  {navItem(FaTools, "Parts Estimation, Labor Costing", "/parts-estimation")}
+                  {navItem(FaCamera, "Photo Upload for Damages", "/photo-upload")}
+                  {navItem(FaClock, "Technician Time Tracking", "/technician-tracking")}
+
                 </ul>
               )}
             </li>
