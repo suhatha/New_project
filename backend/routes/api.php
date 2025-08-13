@@ -5,6 +5,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\ServiceWorkflowController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServiceBayController;
+use App\Http\Controllers\TechnicianController;  
 
 // Role routes
 Route::get('/roles', [RoleController::class, 'index']);
@@ -17,16 +23,37 @@ Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
 Route::get('/role-permissions/{role_id}', [RolePermissionController::class, 'index']);
 Route::post('/role-permissions', [RolePermissionController::class, 'store']);
 
+// Branch management routes (API resource)
+Route::apiResource('branches', BranchController::class);
+Route::put('/branches/{id}', [BranchController::class, 'update']);
+
 // Authentication routes
 Route::post('login', [AuthController::class, 'login']);
 
 // User management routes (can add auth middleware later)
+// Important: Place the specific route before the wildcard route
+Route::get('users/roles/list', [UserController::class, 'getRoles']);
 Route::get('users', [UserController::class, 'index']);
 Route::post('users', [UserController::class, 'store']);
 Route::get('users/{id}', [UserController::class, 'show']);
 Route::put('users/{id}', [UserController::class, 'update']);
 Route::delete('users/{id}', [UserController::class, 'destroy']);
-Route::get('users/roles/list', [UserController::class, 'getRoles']);
+
+// Appointment routes
+Route::apiResource('appointments', AppointmentController::class);
+Route::patch('appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+Route::get('appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+Route::get('appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+Route::get('appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+Route::get('appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+
+// Service Workflow routes
+Route::apiResource('service-workflows', ServiceWorkflowController::class);
+
+Route::apiResource('technicians', TechnicianController::class);
+Route::apiResource('service-bays', ServiceBayController::class);
+Route::apiResource('services', ServiceController::class);
+// ... rest of the 
 
 // Test routes
 Route::get('test/roles', function() {
@@ -86,6 +113,8 @@ Route::get('test/role-permissions/{role_id}', function($role_id) {
         ]);
     }
 });
+
+Route::get('/branches', [App\Http\Controllers\BranchController::class, 'index']);
 
 Route::get('test/check-permissions', function() {
     try {

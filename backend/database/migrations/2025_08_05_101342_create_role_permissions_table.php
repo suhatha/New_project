@@ -13,18 +13,15 @@ return new class extends Migration
     {
         Schema::create('role_permissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
-            $table->string('module_name'); // e.g., 'dashboard', 'user_management', 'inventory'
-            $table->string('display_name'); // e.g., 'Dashboard', 'User Management', 'Inventory'
+            $table->unsignedBigInteger('role_id');
+            $table->string('module_name');
+            $table->string('display_name')->nullable();
             $table->text('description')->nullable();
             $table->boolean('can_view')->default(false);
             $table->boolean('can_create')->default(false);
             $table->boolean('can_update')->default(false);
             $table->boolean('can_delete')->default(false);
             $table->timestamps();
-            
-            // Ensure unique role-module combinations
-            $table->unique(['role_id', 'module_name']);
         });
     }
 
@@ -35,4 +32,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('role_permissions');
     }
-}; 
+};

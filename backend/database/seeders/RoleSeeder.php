@@ -12,30 +12,18 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             [
-                'name' => 'super_admin',
+                'name' => 'Super Admin', // ✅ match this exactly with UserSeeder
                 'description' => 'Full system access with all permissions. Can manage all users, roles, and system settings.'
             ],
             [
-                'name' => 'admin',
+                'name' => 'Admin',
                 'description' => 'Administrative access with most system permissions. Can manage users and roles.'
-            ],
-            [
-                'name' => 'manager',
-                'description' => 'Branch or department manager with limited administrative access.'
-            ],
-            [
-                'name' => 'cashier',
-                'description' => 'Cashier with access to sales and payment functions.'
-            ],
-            [
-                'name' => 'technician',
-                'description' => 'Service technician with access to service and repair functions.'
             ],
         ];
 
         foreach ($roles as $role) {
             DB::table('roles')->updateOrInsert(
-                ['name' => $role['name']], // unique by name
+                ['name' => $role['name']],
                 [
                     'description' => $role['description'],
                     'updated_at' => Carbon::now(),

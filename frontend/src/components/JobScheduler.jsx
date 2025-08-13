@@ -1,49 +1,29 @@
-import React, { useState, useMemo } from 'react';
-import { FaCalendarAlt, FaCar, FaUser, FaTools, FaClock, FaPlus, FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaCar, FaPlus, FaEdit, FaTrash, FaArrowLeft } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const JobScheduler = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      customerName: 'Ahmed Khan',
-      vehicleNumber: 'ABC-1234',
-      serviceType: 'Regular Service',
-      technician: 'John Smith',
-      startTime: '09:00',
-      endTime: '11:00',
-      status: 'In Progress',
-      bay: 'Bay 1',
-      priority: 'High'
-    },
-    {
-      id: 2,
-      customerName: 'Sarah Johnson',
-      vehicleNumber: 'XYZ-5678',
-      serviceType: 'Brake Service',
-      technician: 'Mike Wilson',
-      startTime: '10:00',
-      endTime: '12:30',
-      status: 'Scheduled',
-      bay: 'Bay 2',
-      priority: 'Medium'
-    },
-    {
-      id: 3,
-      customerName: 'David Brown',
-      vehicleNumber: 'DEF-9012',
-      serviceType: 'Engine Repair',
-      technician: 'Alex Davis',
-      startTime: '13:00',
-      endTime: '16:00',
-      status: 'Completed',
-      bay: 'Bay 3',
-      priority: 'Low'
-    }
-  ]);
-
+  const navigate = useNavigate();
+  // State
+  const [appointments, setAppointments] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Mock data - empty arrays
+  const mockServiceTypes = [];
+  const mockTechnicians = [];
+  const mockBays = [];
+  const mockPriorities = ['Low', 'Medium', 'High', 'Urgent'];
+
+  // Generate time slots (8 AM to 6 PM)
+  const timeSlots = Array.from({ length: 11 }, (_, i) => {
+    const hour = i + 8;
+    return `${hour.toString().padStart(2, '0')}:00`;
+  });
+
+  // New appointment form state
   const [newAppointment, setNewAppointment] = useState({
     customerName: '',
     vehicleNumber: '',
@@ -53,147 +33,104 @@ const JobScheduler = () => {
     endTime: '',
     bay: '',
     priority: 'Medium',
-    notes: ''
+    notes: '',
+    status: 'Scheduled'
   });
 
-  // Mock data
-  const technicians = [
-    'John Smith',
-    'Mike Wilson',
-    'Alex Davis',
-    'Sarah Chen',
-    'Tom Anderson'
-  ];
-
-  const serviceTypes = [
-    'Regular Service',
-    'Major Service',
-    'Brake Service',
-    'Engine Repair',
-    'Electrical Work',
-    'AC Service',
-    'Tire Service',
-    'Custom Work'
-  ];
-
-  const bays = ['Bay 1', 'Bay 2', 'Bay 3', 'Bay 4', 'Bay 5'];
-  const priorities = ['Low', 'Medium', 'High', 'Urgent'];
-
-  const timeSlots = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-    '16:00', '16:30', '17:00', '17:30', '18:00'
-  ];
-
-  const handleAddAppointment = () => {
-    try {
-      if (!newAppointment.customerName || !newAppointment.vehicleNumber || !newAppointment.serviceType) {
-        alert('Please fill in all required fields');
-        return;
+  // Load mock data
+  useEffect(() => {
+    const loadMockData = async () => {
+      setLoading(true);
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setAppointments([]); // Empty appointments array
+      } catch (err) {
+        setError('Failed to load data');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const appointment = {
-        id: Date.now(),
-        ...newAppointment,
-        status: 'Scheduled'
-      };
+    loadMockData();
+  }, []);
 
-      setAppointments(prev => [...prev, appointment]);
-      setNewAppointment({
-        customerName: '',
-        vehicleNumber: '',
-        serviceType: '',
-        technician: '',
-        startTime: '',
-        endTime: '',
-        bay: '',
-        priority: 'Medium',
-        notes: ''
-      });
-      setShowAddModal(false);
-    } catch (error) {
-      console.error('Error adding appointment:', error);
-    }
-  };
-
-  const handleUpdateAppointment = () => {
-    try {
-      if (!editingAppointment) return;
-
-      setAppointments(prev => prev.map(app => 
-        app.id === editingAppointment.id ? { ...app, ...newAppointment } : app
-      ));
-
-      setEditingAppointment(null);
-      setNewAppointment({
-        customerName: '',
-        vehicleNumber: '',
-        serviceType: '',
-        technician: '',
-        startTime: '',
-        endTime: '',
-        bay: '',
-        priority: 'Medium',
-        notes: ''
-      });
-      setShowAddModal(false);
-    } catch (error) {
-      console.error('Error updating appointment:', error);
-    }
-  };
-
-  const handleDeleteAppointment = (id) => {
-    try {
-      if (window.confirm('Are you sure you want to delete this appointment?')) {
-        setAppointments(prev => prev.filter(app => app.id !== id));
-      }
-    } catch (error) {
-      console.error('Error deleting appointment:', error);
-    }
-  };
-
-  const handleStatusChange = (id, newStatus) => {
-    try {
-      setAppointments(prev => prev.map(app => 
-        app.id === id ? { ...app, status: newStatus } : app
-      ));
-    } catch (error) {
-      console.error('Error changing status:', error);
-    }
-  };
-
-  const handleEditAppointment = (appointment) => {
-    try {
-      setEditingAppointment(appointment);
-      setNewAppointment({
-        customerName: appointment.customerName,
-        vehicleNumber: appointment.vehicleNumber,
-        serviceType: appointment.serviceType,
-        technician: appointment.technician,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        bay: appointment.bay,
-        priority: appointment.priority,
-        notes: appointment.notes || ''
-      });
-      setShowAddModal(true);
-    } catch (error) {
-      console.error('Error editing appointment:', error);
-    }
-  };
-
+  // Handle input changes
   const handleInputChange = (e) => {
-    try {
-      const { name, value } = e.target;
-      setNewAppointment(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    } catch (error) {
-      console.error('Error in handleInputChange:', error);
+    const { name, value } = e.target;
+    setNewAppointment(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (editingAppointment) {
+      // Update existing appointment
+      setAppointments(prev => 
+        prev.map(app => 
+          app.id === editingAppointment.id ? { ...newAppointment, id: editingAppointment.id } : app
+        )
+      );
+    } else {
+      // Add new appointment
+      const newAppt = {
+        ...newAppointment,
+        id: Date.now()
+      };
+      setAppointments(prev => [...prev, newAppt]);
+    }
+    
+    // Reset form and close modal
+    resetForm();
+    setShowAddModal(false);
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setNewAppointment({
+      customerName: '',
+      vehicleNumber: '',
+      serviceType: '',
+      technician: '',
+      startTime: '',
+      endTime: '',
+      bay: '',
+      priority: 'Medium',
+      notes: '',
+      status: 'Scheduled'
+    });
+    setEditingAppointment(null);
+  };
+
+  // Handle edit appointment
+  const handleEdit = (appointment) => {
+    setEditingAppointment(appointment);
+    setNewAppointment({ ...appointment });
+    setShowAddModal(true);
+  };
+
+  // Handle delete appointment
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this appointment?')) {
+      setAppointments(prev => prev.filter(app => app.id !== id));
     }
   };
 
+  // Handle status change
+  const handleStatusChange = (id, newStatus) => {
+    setAppointments(prev => 
+      prev.map(app => 
+        app.id === id ? { ...app, status: newStatus } : app
+      )
+    );
+  };
+
+  // Get status color class
   const getStatusColor = (status) => {
     switch (status) {
       case 'Scheduled': return 'bg-blue-100 text-blue-800';
@@ -204,178 +141,123 @@ const JobScheduler = () => {
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'Urgent': return 'bg-red-500';
-      case 'High': return 'bg-orange-500';
-      case 'Medium': return 'bg-yellow-500';
-      case 'Low': return 'bg-green-500';
-      default: return 'bg-gray-500';
-    }
-  };
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-600">{error}</div>;
 
-  const todayAppointments = useMemo(() => {
-    try {
-      return appointments.filter(app => {
-        const appDate = new Date(selectedDate);
-        return appDate.toDateString() === selectedDate.toDateString();
-      });
-    } catch (error) {
-      console.error('Error filtering appointments:', error);
-      return [];
-    }
-  }, [appointments, selectedDate]);
-
-  try {
-    return (
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Job Scheduler</h1>
-            <p className="text-gray-600">Drag & drop appointment scheduling for automotive services</p>
-          </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+  return (
+    <div className="container mx-auto p-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-800"
           >
-            <FaPlus size={14} />
-            Add Appointment
+            <FaArrowLeft className="mr-2" /> Back
           </button>
+          <h1 className="text-2xl font-bold">Job Scheduler</h1>
         </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded flex items-center hover:bg-blue-700 transition-colors"
+        >
+          <FaPlus className="mr-2" /> Add Appointment
+        </button>
+      </div>
 
-        {/* Calendar and Schedule View */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Calendar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <FaCalendarAlt className="text-blue-600" />
-                Calendar View
-              </h2>
-              <div className="mb-4">
-                <input
-                  type="date"
-                  value={selectedDate.toISOString().split('T')[0]}
-                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-semibold text-gray-800">
-                  {selectedDate.toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </p>
-                <p className="text-gray-600 mt-2">
-                  {todayAppointments.length} appointment{todayAppointments.length !== 1 ? 's' : ''} scheduled
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Schedule Grid */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <FaClock className="text-green-600" />
-                Schedule for {selectedDate.toLocaleDateString()}
-              </h2>
-              
-              {/* Time Slots */}
-              <div className="space-y-2">
-                {timeSlots.map((time) => {
-                  const appointmentsAtTime = todayAppointments.filter(app => 
-                    app.startTime === time || 
-                    (app.startTime <= time && app.endTime > time)
-                  );
-
-                  return (
-                    <div key={time} className="flex items-center border-b border-gray-200 py-2">
-                      <div className="w-20 text-sm font-medium text-gray-600">
-                        {time}
-                      </div>
-                      <div className="flex-1 flex gap-2">
-                        {appointmentsAtTime.map((appointment) => (
-                          <div
-                            key={appointment.id}
-                            className="flex-1 bg-blue-50 border border-blue-200 rounded-md p-3 cursor-pointer hover:bg-blue-100 transition-colors"
-                            onClick={() => handleEditAppointment(appointment)}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-sm">{appointment.customerName}</span>
-                              <div className="flex items-center gap-1">
-                                <div 
-                                  className={`w-3 h-3 rounded-full ${getPriorityColor(appointment.priority)}`}
-                                  title={appointment.priority}
-                                ></div>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                                  {appointment.status}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              <div>{appointment.vehicleNumber} - {appointment.serviceType}</div>
-                              <div>{appointment.technician} - {appointment.bay}</div>
-                              <div>{appointment.startTime} - {appointment.endTime}</div>
-                            </div>
-                          </div>
-                        ))}
-                        {appointmentsAtTime.length === 0 && (
-                          <div className="flex-1 text-gray-400 text-sm py-3">
-                            No appointments
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Appointments List */}
-        <div className="bg-white rounded-lg shadow-md p-6 mt-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <FaCar className="text-purple-600" />
-            All Appointments
+      {/* Appointments Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+            <FaCar className="mr-2 text-purple-600" /> Appointments
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+        </div>
+        <div className="overflow-x-auto max-h-[calc(100vh-250px)]">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Vehicle
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Service
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Time Slot
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {appointments.length === 0 ? (
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technician</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bay</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <td colSpan="6" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <FaCar className="h-12 w-12 text-gray-300 mb-3" />
+                      <p className="text-gray-500 text-sm">No appointments found</p>
+                      <p className="text-gray-400 text-xs mt-1">Add a new appointment to get started</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {appointments.map((appointment) => (
-                  <tr key={appointment.id} className="hover:bg-gray-50">
+              ) : (
+                appointments.map((appointment) => (
+                  <tr key={appointment.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{appointment.customerName}</div>
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 rounded-full">
+                          <FaUserCog className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{appointment.customerName}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{appointment.vehicleNumber}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{appointment.serviceType}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{appointment.technician}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {appointment.startTime} - {appointment.endTime}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="bg-gray-100 rounded-full p-2">
+                          <FaCar className="h-5 w-5 text-gray-600" />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{appointment.vehicleNumber}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{appointment.bay}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-purple-100 rounded-full">
+                          <FaTools className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{appointment.serviceType}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 font-medium">
+                        {appointment.startTime} - {appointment.endTime}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={appointment.status}
                         onChange={(e) => handleStatusChange(appointment.id, e.target.value)}
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)} border-0`}
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          appointment.status === 'Completed' 
+                            ? 'bg-green-100 text-green-800' 
+                            : appointment.status === 'In Progress'
+                            ? 'bg-blue-100 text-blue-800'
+                            : appointment.status === 'Cancelled'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
                       >
                         <option value="Scheduled">Scheduled</option>
                         <option value="In Progress">In Progress</option>
@@ -383,207 +265,198 @@ const JobScheduler = () => {
                         <option value="Cancelled">Cancelled</option>
                       </select>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleEditAppointment(appointment)}
-                          className="text-blue-600 hover:text-blue-800 p-1"
-                          title="Edit"
-                        >
-                          <FaEdit size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAppointment(appointment.id)}
-                          className="text-red-600 hover:text-red-800 p-1"
-                          title="Delete"
-                        >
-                          <FaTrash size={14} />
-                        </button>
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleEdit(appointment)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-4 px-3 py-1 rounded-md hover:bg-indigo-50 transition-colors"
+                      >
+                        <FaEdit className="inline mr-1" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(appointment.id)}
+                        className="text-red-600 hover:text-red-900 px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                      >
+                        <FaTrash className="inline mr-1" /> Delete
+                      </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        {/* Add/Edit Appointment Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+      {/* Add/Edit Appointment Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md flex flex-col max-h-[90vh]">
+            <div className="p-6 pb-0">
+              <h3 className="text-lg font-semibold">
                 {editingAppointment ? 'Edit Appointment' : 'Add New Appointment'}
               </h3>
-              
-              <div className="space-y-4">
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-6 pt-4 space-y-4 overflow-y-auto flex-1">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
                   <input
                     type="text"
                     name="customerName"
                     value={newAppointment.customerName}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border rounded"
+                    required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Number *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Number *</label>
                   <input
                     type="text"
                     name="vehicleNumber"
                     value={newAppointment.vehicleNumber}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border rounded"
+                    required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Type *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Service Type *</label>
                   <select
                     name="serviceType"
                     value={newAppointment.serviceType}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 border rounded"
+                    required
                   >
                     <option value="">Select Service Type</option>
-                    {serviceTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Technician</label>
-                  <select
-                    name="technician"
-                    value={newAppointment.technician}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select Technician</option>
-                    {technicians.map(tech => (
-                      <option key={tech} value={tech}>{tech}</option>
+                    {mockServiceTypes.map((type, index) => (
+                      <option key={index} value={type}>{type}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
                     <select
                       name="startTime"
                       value={newAppointment.startTime}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border rounded"
+                      required
                     >
                       <option value="">Select Time</option>
-                      {timeSlots.map(time => (
-                        <option key={time} value={time}>{time}</option>
+                      {timeSlots.map((time, index) => (
+                        <option key={index} value={time}>{time}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
                     <select
                       name="endTime"
                       value={newAppointment.endTime}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border rounded"
+                      required
+                      disabled={!newAppointment.startTime}
                     >
                       <option value="">Select Time</option>
-                      {timeSlots.map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
+                      {timeSlots
+                        .filter(time => !newAppointment.startTime || time > newAppointment.startTime)
+                        .map((time, index) => (
+                          <option key={index} value={time}>{time}</option>
+                        ))}
                     </select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bay</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Technician</label>
                     <select
-                      name="bay"
-                      value={newAppointment.bay}
+                      name="technician"
+                      value={newAppointment.technician}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border rounded"
                     >
-                      <option value="">Select Bay</option>
-                      {bays.map(bay => (
-                        <option key={bay} value={bay}>{bay}</option>
+                      <option value="">Select Technician</option>
+                      {mockTechnicians.map((tech, index) => (
+                        <option key={index} value={tech}>{tech}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bay</label>
                     <select
-                      name="priority"
-                      value={newAppointment.priority}
+                      name="bay"
+                      value={newAppointment.bay}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 border rounded"
                     >
-                      {priorities.map(priority => (
-                        <option key={priority} value={priority}>{priority}</option>
+                      <option value="">Select Bay</option>
+                      {mockBays.map((bay, index) => (
+                        <option key={index} value={bay}>{bay}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <select
+                    name="priority"
+                    value={newAppointment.priority}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                  >
+                    {mockPriorities.map((priority, index) => (
+                      <option key={index} value={priority}>{priority}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                   <textarea
                     name="notes"
                     value={newAppointment.notes}
                     onChange={handleInputChange}
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full p-2 border rounded"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingAppointment(null);
-                    setNewAppointment({
-                      customerName: '',
-                      vehicleNumber: '',
-                      serviceType: '',
-                      technician: '',
-                      startTime: '',
-                      endTime: '',
-                      bay: '',
-                      priority: 'Medium',
-                      notes: ''
-                    });
-                  }}
-                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={editingAppointment ? handleUpdateAppointment : handleAddAppointment}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  {editingAppointment ? 'Update' : 'Add'} Appointment
-                </button>
+              <div className="p-6 pt-4 border-t border-gray-200 mt-auto">
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      resetForm();
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors min-w-[100px]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors min-w-[100px]"
+                  >
+                    {editingAppointment ? 'Update' : 'Add'} Appointment
+                  </button>
+                </div>
               </div>
-            </div>
+            </form>
           </div>
-        )}
-      </div>
-    );
-  } catch (error) {
-    console.error('Error rendering JobScheduler:', error);
-    return (
-      <div className="max-w-7xl mx-auto p-6">
-        <h1 className="text-3xl font-bold text-gray-800">Job Scheduler</h1>
-        <p className="text-red-600">Error loading job scheduler page. Please refresh the page.</p>
-      </div>
-    );
-  }
+        </div>
+      )}
+    </div>
+  );
 };
 
-export default JobScheduler; 
+export default JobScheduler;

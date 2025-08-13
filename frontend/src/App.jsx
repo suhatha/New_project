@@ -52,6 +52,7 @@ import { PageProvider } from "./context/PageContext";
 import UserManagement from "./components/UserManagement";
 import RoleManagement from "./components/RoleManagement";
 import RolePermissions from "./components/RolePermissions";
+import ServiceWorkflow from './components/ServiceWorkflow';
 
 
 function ItemFormWrapper() {
@@ -94,6 +95,14 @@ function App() {
               role={JSON.parse(localStorage.getItem("user"))?.role || "guest"}
             />
           }
+        />
+        <Route 
+          path="service-workflow" 
+          element={
+            <ProtectedRoute>
+              <ServiceWorkflow />
+            </ProtectedRoute>
+          } 
         />
 
         {/* Item management routes with role-based protection */}
