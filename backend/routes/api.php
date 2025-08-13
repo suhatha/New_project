@@ -6,7 +6,14 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ItemController;
-
+use App\Http\Controllers\ExpiryItemController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\StoreLocationController;
+use App\Http\Controllers\ItemAgeAnalysisController;
+use App\Http\Controllers\SalesController;
 // Role routes
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/roles/{id}', [RoleController::class, 'show']);
@@ -252,6 +259,54 @@ Route::delete('items/{id}', [ItemController::class, 'destroy']);
 Route::get('items/categories/list', [ItemController::class, 'getCategories']);
 Route::get('items/suppliers/list', [ItemController::class, 'getSuppliers']);
 
-// Expiry routes
-Route::get('/expiry-items', [ExpiryItemController::class, 'index']);
-Route::post('/expiry-items', [ExpiryItemController::class, 'store']);
+// Expiry routes (temporarily disabled for debugging)
+// Route::get('/expiry-items', [ExpiryItemController::class, 'index']);
+// Route::post('/expiry-items', [ExpiryItemController::class, 'store']);
+
+// Supplier routes
+Route::get('/suppliers', [SupplierController::class, 'index']);
+Route::post('/suppliers', [SupplierController::class, 'store']);
+Route::get('/suppliers/{supplier}', [SupplierController::class, 'show']);
+Route::put('/suppliers/{supplier}', [SupplierController::class, 'update']);
+Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy']);
+
+// Category routes
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::get('/categories/{category}', [CategoryController::class, 'show']);
+Route::put('/categories/{category}', [CategoryController::class, 'update']);
+Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+
+// Company routes
+Route::get('/companies', [CompanyController::class, 'index']);
+Route::post('/companies', [CompanyController::class, 'store']);
+Route::get('/companies/{company}', [CompanyController::class, 'show']);
+Route::put('/companies/{company}', [CompanyController::class, 'update']);
+Route::delete('/companies/{company}', [CompanyController::class, 'destroy']);
+
+// Unit routes
+Route::get('/units', [UnitController::class, 'index']);
+Route::post('/units', [UnitController::class, 'store']);
+Route::get('/units/{unit}', [UnitController::class, 'show']);
+Route::put('/units/{unit}', [UnitController::class, 'update']);
+Route::delete('/units/{unit}', [UnitController::class, 'destroy']);
+
+// Store Location routes
+Route::get('/store-locations', [StoreLocationController::class, 'index']);
+Route::post('/store-locations', [StoreLocationController::class, 'store']);
+Route::get('/store-locations/{storeLocation}', [StoreLocationController::class, 'show']);
+Route::put('/store-locations/{storeLocation}', [StoreLocationController::class, 'update']);
+Route::delete('/store-locations/{storeLocation}', [StoreLocationController::class, 'destroy']);
+
+// Item Age Analysis routes
+Route::get('/item-age-analysis', [ItemAgeAnalysisController::class, 'getAgeAnalysisData']);
+Route::post('/item-age-analysis/generate-report', [ItemAgeAnalysisController::class, 'generateReport']);
+
+// Sales routes
+Route::get('/sales', [SalesController::class, 'index']);
+Route::post('/sales', [SalesController::class, 'store']);
+Route::get('/sales/{sale}', [SalesController::class, 'show']);
+Route::put('/sales/{sale}', [SalesController::class, 'update']);
+Route::delete('/sales/{sale}', [SalesController::class, 'destroy']);
+Route::get('/sales-statistics', [SalesController::class, 'getStatistics']);
+Route::get('/generate-bill-number', [SalesController::class, 'generateBillNumber']);

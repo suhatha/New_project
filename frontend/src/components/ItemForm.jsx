@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiPackage, FiDollarSign, FiBox, FiTag, FiMapPin, FiArrowLeft, FiLayers, FiBarChart2, FiPlus, FiX } from 'react-icons/fi';
+import axios from 'axios';
 
 export default function ItemForm({ onSave, onCancel, item = null }) {
   // State to track the next available item ID
@@ -11,36 +12,170 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
   const [newValue, setNewValue] = useState('');
   
   // State for dropdown options
-  const [categoryOptions, setCategoryOptions] = useState([
-    'Engine Parts', 'Brake System', 'Electrical', 'Suspension', 'Transmission',
-    'Cooling System', 'Fuel System', 'Exhaust System', 'Body Parts', 'Interior',
-    'Tools', 'Lubricants', 'Filters', 'Other'
-  ]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [typeOptions, setTypeOptions] = useState([
     'Original', 'OEM', 'Aftermarket', 'Remanufactured', 'Used'
   ]);
-  const [supplierOptions, setSupplierOptions] = useState([
-    'Supplier 1', 'Supplier 2', 'Supplier 3'
-  ]);
-  const [companyOptions, setCompanyOptions] = useState([
-    'Company 1', 'Company 2', 'Company 3'
-  ]);
-  const [unitOptions, setUnitOptions] = useState([
-    'Piece', 'Set', 'Pair', 'Liter', 'Kilogram'
-  ]);
-  const [locationOptions, setLocationOptions] = useState([
-    'Main Store', 'Warehouse 1', 'Warehouse 2'
-  ]);
+  const [supplierOptions, setSupplierOptions] = useState([]);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const [companyOptions, setCompanyOptions] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [unitOptions, setUnitOptions] = useState([]);
+  const [loadingUnits, setLoadingUnits] = useState(false);
+  const [locationOptions, setLocationOptions] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+
+  // API base URL - adjust this to match your Laravel backend URL
+  const API_BASE_URL = 'http://127.0.0.1:8000/api';
+
+  // Fetch suppliers from backend API
+  const fetchSuppliers = async () => {
+    try {
+      setLoadingSuppliers(true);
+      const response = await axios.get(`${API_BASE_URL}/suppliers`);
+      // Extract supplier names from the response
+      const supplierNames = response.data.map(supplier => supplier.supplier_name);
+      setSupplierOptions(supplierNames);
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      // Fallback to default options if API fails
+      setSupplierOptions(['No suppliers available']);
+    } finally {
+      setLoadingSuppliers(false);
+    }
+  };
+
+  // Fetch companies from backend API
+  const fetchCompanies = async () => {
+    try {
+      setLoadingCompanies(true);
+      const response = await axios.get(`${API_BASE_URL}/companies`);
+      // Extract company names from the response
+      const companyNames = response.data.map(company => company.company_name);
+      setCompanyOptions(companyNames);
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      // Fallback to default options if API fails
+      setCompanyOptions(['No companies available']);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
+
+  // Fetch units from backend API
+  const fetchUnits = async () => {
+    try {
+      setLoadingUnits(true);
+      const response = await axios.get(`${API_BASE_URL}/units`);
+      // Extract unit names from the response
+      const unitNames = response.data.map(unit => unit.unit_name);
+      setUnitOptions(unitNames);
+    } catch (error) {
+      console.error('Error fetching units:', error);
+      // Fallback to default options if API fails
+      setUnitOptions(['No units available']);
+    } finally {
+      setLoadingUnits(false);
+    }
+  };
+
+  // Fetch store locations from backend API
+  const fetchLocations = async () => {
+    try {
+      setLoadingLocations(true);
+      const response = await axios.get(`${API_BASE_URL}/store-locations`);
+      // Extract location names from the response
+      const locationNames = response.data.map(location => location.location_name);
+      setLocationOptions(locationNames);
+    } catch (error) {
+      console.error('Error fetching store locations:', error);
+      // Fallback to default options if API fails
+      setLocationOptions(['No locations available']);
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  // Fetch categories from backend API
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await axios.get(`${API_BASE_URL}/categories`);
+      // Extract category names from the response
+      const categoryNames = response.data.map(category => category.category_name);
+      setCategoryOptions(categoryNames);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to default options if API fails
+      setCategoryOptions(['No categories available']);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  // Check for duplicate item names
+  const checkDuplicateItem = async (productName) => {
+    if (!productName.trim()) {
+      setDuplicateError('');
+      setDuplicateCheckPassed(false);
+      setFieldsDisabled(true);
+      return;
+    }
+
+    try {
+      setIsCheckingDuplicate(true);
+      setDuplicateError('');
+      
+      // Check if item exists by searching for the name
+      const response = await axios.get(`${API_BASE_URL}/items?search=${encodeURIComponent(productName.trim())}`);
+      
+      // Handle the API response structure correctly
+      let items = [];
+      if (response.data && response.data.success && response.data.data) {
+        // Handle paginated response
+        items = response.data.data.data || response.data.data;
+      } else if (Array.isArray(response.data)) {
+        // Handle direct array response
+        items = response.data;
+      }
+      
+      // Check if any item has the exact same name (case-insensitive)
+      const existingItem = items.find(
+        item => item.name && item.name.toLowerCase() === productName.trim().toLowerCase()
+      );
+      
+      if (existingItem) {
+        setDuplicateError(`Item "${productName}" already exists! Please choose a different name.`);
+        setDuplicateCheckPassed(false);
+        setFieldsDisabled(true);
+      } else {
+        setDuplicateError('');
+        setDuplicateCheckPassed(true);
+        setFieldsDisabled(false);
+        // Auto-populate the name field in basic information
+        setForm(prev => ({ ...prev, name: productName.trim() }));
+      }
+    } catch (error) {
+      console.error('Error checking duplicate item:', error);
+      console.error('Response data:', error.response?.data);
+      setDuplicateError('Error checking item name. Please try again.');
+      setDuplicateCheckPassed(false);
+      setFieldsDisabled(true);
+    } finally {
+      setIsCheckingDuplicate(false);
+    }
+  };
   
   const [form, setForm] = useState({
-    branch: '',
+    product_name: '', // Replaced branch with product_name
     item_id: '',  // This will be auto-generated
     name: '',
     short_name: '',
     expiry: '',
     barcode: '',
     mrp: '',
-    cost: '',
+    buying_cost: '', // Renamed from cost to buying_cost
     sales_price: '',
     min_price: '',
     min_stock: '',
@@ -59,6 +194,130 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
   });
 
   const [loading, setLoading] = useState(false);
+  
+  // Duplicate checking states
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
+  const [duplicateCheckPassed, setDuplicateCheckPassed] = useState(false);
+  const [duplicateError, setDuplicateError] = useState('');
+  const [fieldsDisabled, setFieldsDisabled] = useState(true); // Initially disable all fields except product_name
+
+  // Debounced product name checking
+  useEffect(() => {
+    if (form.product_name) {
+      const timeoutId = setTimeout(() => {
+        checkDuplicateItem(form.product_name);
+      }, 500); // 500ms delay
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setDuplicateError('');
+      setDuplicateCheckPassed(false);
+      setFieldsDisabled(true);
+    }
+  }, [form.product_name]);
+
+  // Fetch suppliers, categories, companies, units, and store locations from backend when component mounts
+  useEffect(() => {
+    fetchSuppliers();
+    fetchCategories();
+    fetchCompanies();
+    fetchUnits();
+    fetchLocations();
+  }, []);
+
+  // Popup handler functions
+  const handleOpenPopup = (type) => {
+    setPopupType(type);
+    setNewValue('');
+    setShowPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    setPopupType('');
+    setNewValue('');
+  };
+
+  const handleAddNewValue = async () => {
+    if (!newValue.trim()) {
+      alert('Please enter a value');
+      return;
+    }
+
+    try {
+      let endpoint = '';
+      let data = {};
+      
+      switch (popupType) {
+        case 'category':
+          endpoint = `${API_BASE_URL}/categories`;
+          data = { category_name: newValue.trim(), description: '' };
+          break;
+        case 'supplier':
+          endpoint = `${API_BASE_URL}/suppliers`;
+          data = { supplier_name: newValue.trim(), address: '', contact: '', opening_balance: 0 };
+          break;
+        case 'company':
+          endpoint = `${API_BASE_URL}/companies`;
+          data = { company_name: newValue.trim(), description: '' };
+          break;
+        case 'unit':
+          endpoint = `${API_BASE_URL}/units`;
+          data = { unit_name: newValue.trim(), description: '' };
+          break;
+        case 'store_location':
+          endpoint = `${API_BASE_URL}/store-locations`;
+          data = { location_name: newValue.trim(), phone: '', address: '' };
+          break;
+        case 'type':
+          // Type is handled locally since it's not connected to backend
+          setTypeOptions(prev => [...prev, newValue.trim()]);
+          handleClosePopup();
+          return;
+        default:
+          alert('Unknown type');
+          return;
+      }
+
+      // Make API call to save new item
+      const response = await axios.post(endpoint, data);
+      
+      if (response.status === 200 || response.status === 201) {
+        // Successfully added, now refresh the dropdown data
+        switch (popupType) {
+          case 'category':
+            await fetchCategories();
+            // Set the form field to the newly added value
+            setForm(prev => ({ ...prev, category: newValue.trim() }));
+            break;
+          case 'supplier':
+            await fetchSuppliers();
+            setForm(prev => ({ ...prev, supplier: newValue.trim() }));
+            break;
+          case 'company':
+            await fetchCompanies();
+            setForm(prev => ({ ...prev, company: newValue.trim() }));
+            break;
+          case 'unit':
+            await fetchUnits();
+            setForm(prev => ({ ...prev, unit: newValue.trim() }));
+            break;
+          case 'store_location':
+            await fetchLocations();
+            setForm(prev => ({ ...prev, store_location: newValue.trim() }));
+            break;
+        }
+        
+        alert(`${popupType.charAt(0).toUpperCase() + popupType.slice(1).replace('_', ' ')} added successfully!`);
+        handleClosePopup();
+      } else {
+        throw new Error('Failed to add new item');
+      }
+    } catch (error) {
+      console.error(`Error adding new ${popupType}:`, error);
+      alert(`Failed to add new ${popupType.replace('_', ' ')}. Please try again.`);
+    }
+  };
 
   // Load item data if editing or set next item ID if creating new
   useEffect(() => {
@@ -91,15 +350,13 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
       });
       
       // Check if the item's values need to be added to the dropdown options
-      if (item.category && !categoryOptions.includes(item.category)) {
-        setCategoryOptions(prev => [...prev, item.category]);
-      }
+      // Note: Category options are now fetched from backend, so we don't need to add them manually
+      // The category dropdown will be populated from the database
       if (item.type && !typeOptions.includes(item.type)) {
         setTypeOptions(prev => [...prev, item.type]);
       }
-      if (item.supplier && !supplierOptions.includes(item.supplier)) {
-        setSupplierOptions(prev => [...prev, item.supplier]);
-      }
+      // Note: Supplier options are now fetched from backend, so we don't need to add them manually
+      // The supplier dropdown will be populated from the database
       if (item.company && !companyOptions.includes(item.company)) {
         setCompanyOptions(prev => [...prev, item.company]);
       }
@@ -115,7 +372,7 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
       // For this example, we'll simulate it with a local state
       fetchLatestItemId();
     }
-  }, [item, categoryOptions, typeOptions, supplierOptions, companyOptions, unitOptions, locationOptions]);
+  }, [item, typeOptions, companyOptions, unitOptions, locationOptions]);
   
   // Simulate fetching the latest item ID from the backend
   const fetchLatestItemId = () => {
@@ -138,67 +395,19 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
     }));
   };
 
-  // Function to handle opening popups
-  const handleOpenPopup = (type) => {
-    setPopupType(type);
-    setNewValue('');
-    setShowPopup(true);
-  };
 
-  // Function to handle closing popups
-  const handleClosePopup = () => {
-    setShowPopup(false);
-    setPopupType('');
-    setNewValue('');
-  };
-
-  // Function to handle adding new values
-  const handleAddNewValue = () => {
-    if (!newValue.trim()) {
-      alert('Please enter a value');
-      return;
-    }
-
-    // In a real application, you would make an API call to add the new value to the database
-    // For now, we'll just update the form with the new value and add it to the dropdown options
-    setForm(prev => ({
-      ...prev,
-      [popupType]: newValue
-    }));
-
-    // Add the new value to the appropriate dropdown options
-    switch(popupType) {
-      case 'category':
-        setCategoryOptions(prev => [...prev, newValue]);
-        break;
-      case 'type':
-        setTypeOptions(prev => [...prev, newValue]);
-        break;
-      case 'supplier':
-        setSupplierOptions(prev => [...prev, newValue]);
-        break;
-      case 'company':
-        setCompanyOptions(prev => [...prev, newValue]);
-        break;
-      case 'unit':
-        setUnitOptions(prev => [...prev, newValue]);
-        break;
-      case 'store_location':
-        setLocationOptions(prev => [...prev, newValue]);
-        break;
-      default:
-        break;
-    }
-
-    // Close the popup
-    handleClosePopup();
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!form.name || !form.branch) {
-      alert('Please fill in all required fields (Branch, Name)');
+    if (!form.product_name || !form.name) {
+      alert('Please fill in all required fields (Product Name, Name)');
+      return;
+    }
+    
+    // Check if duplicate validation has passed
+    if (!duplicateCheckPassed) {
+      alert('Please enter a unique product name and wait for validation to complete.');
       return;
     }
 
@@ -409,27 +618,42 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
         
         <div style={styles.content}>
           <form onSubmit={handleSubmit}>
-            {/* Branch Selection */}
+            {/* Product/Item Name */}
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>
-                <FiMapPin />
-                Branch
+                <FiPackage />
+                Product/Item Name
               </h3>
               <div style={styles.grid}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Branch *</label>
-                  <select
-                    name="branch"
-                    value={form.branch}
+                  <label style={styles.label}>Product/Item Name *</label>
+                  <input
+                    type="text"
+                    name="product_name"
+                    value={form.product_name}
                     onChange={handleChange}
-                    style={styles.select}
+                    style={{
+                      ...styles.input,
+                      borderColor: duplicateError ? '#ef4444' : duplicateCheckPassed ? '#10b981' : '#d1d5db'
+                    }}
+                    placeholder="Enter product/item name"
                     required
-                  >
-                    <option value="">Select Branch</option>
-                    <option value="Main Branch">Main Branch</option>
-                    <option value="Branch 1">Branch 1</option>
-                    <option value="Branch 2">Branch 2</option>
-                  </select>
+                  />
+                  {isCheckingDuplicate && (
+                    <div style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                      🔍 Checking for duplicates...
+                    </div>
+                  )}
+                  {duplicateError && (
+                    <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                      ⚠️ {duplicateError}
+                    </div>
+                  )}
+                  {duplicateCheckPassed && !duplicateError && (
+                    <div style={{ color: '#10b981', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                      ✅ Product name is available!
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -453,14 +677,19 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Name *</label>
+                  <label style={styles.label}>Name * (Auto-populated after product name check)</label>
                   <input
                     type="text"
                     name="name"
                     value={form.name}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: '#f0f0f0',
+                      cursor: 'not-allowed'
+                    }}
                     required
+                    readOnly
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -470,7 +699,12 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="short_name"
                     value={form.short_name}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -480,7 +714,12 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="expiry"
                     value={form.expiry}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -490,7 +729,12 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="barcode"
                     value={form.barcode}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -500,9 +744,14 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="mrp"
                     value={form.mrp}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     step="0.01"
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -511,7 +760,12 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="status"
                     value={form.status}
                     onChange={handleChange}
-                    style={styles.select}
+                    style={{
+                      ...styles.select,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'pointer'
+                    }}
+                    disabled={fieldsDisabled}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -528,15 +782,20 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
               </h3>
               <div style={styles.grid}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Cost</label>
+                  <label style={styles.label}>Buying Cost</label>
                   <input
                     type="number"
-                    name="cost"
-                    value={form.cost}
+                    name="buying_cost"
+                    value={form.buying_cost}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     step="0.01"
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -546,9 +805,14 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="sales_price"
                     value={form.sales_price}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     step="0.01"
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -558,9 +822,14 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="min_price"
                     value={form.min_price}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     step="0.01"
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
               </div>
@@ -580,8 +849,13 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="min_stock"
                     value={form.min_stock}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -591,8 +865,13 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="quantity"
                     value={form.quantity}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -602,8 +881,13 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="open_qty"
                     value={form.open_qty}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -613,9 +897,14 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                     name="open_value"
                     value={form.open_value}
                     onChange={handleChange}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                      cursor: fieldsDisabled ? 'not-allowed' : 'text'
+                    }}
                     step="0.01"
                     min="0"
+                    disabled={fieldsDisabled}
                   />
                 </div>
               </div>
@@ -635,9 +924,17 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                       name="category"
                       value={form.category}
                       onChange={handleChange}
-                      style={{ ...styles.select, flex: 1 }}
+                      style={{
+                        ...styles.select,
+                        flex: 1,
+                        backgroundColor: (fieldsDisabled || loadingCategories) ? '#f5f5f5' : '#ffffff',
+                        cursor: (fieldsDisabled || loadingCategories) ? 'not-allowed' : 'pointer'
+                      }}
+                      disabled={fieldsDisabled || loadingCategories}
                     >
-                      <option value="">Select Category</option>
+                      <option value="">
+                        {loadingCategories ? 'Loading categories...' : 'Select Category'}
+                      </option>
                       {categoryOptions.map((option, index) => (
                         <option key={`category-${index}`} value={option}>{option}</option>
                       ))}
@@ -669,7 +966,13 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                       name="type"
                       value={form.type}
                       onChange={handleChange}
-                      style={{ ...styles.select, flex: 1 }}
+                      style={{ 
+                        ...styles.select, 
+                        flex: 1,
+                        backgroundColor: fieldsDisabled ? '#f5f5f5' : '#ffffff',
+                        cursor: fieldsDisabled ? 'not-allowed' : 'pointer'
+                      }}
+                      disabled={fieldsDisabled}
                     >
                       <option value="">Select Type</option>
                       {typeOptions.map((option, index) => (
@@ -703,9 +1006,17 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                       name="supplier"
                       value={form.supplier}
                       onChange={handleChange}
-                      style={{ ...styles.select, flex: 1 }}
+                      style={{ 
+                        ...styles.select, 
+                        flex: 1,
+                        backgroundColor: (fieldsDisabled || loadingSuppliers) ? '#f5f5f5' : '#ffffff',
+                        cursor: (fieldsDisabled || loadingSuppliers) ? 'not-allowed' : 'pointer'
+                      }}
+                      disabled={fieldsDisabled || loadingSuppliers}
                     >
-                      <option value="">Select Supplier</option>
+                      <option value="">
+                        {loadingSuppliers ? 'Loading suppliers...' : 'Select Supplier'}
+                      </option>
                       {supplierOptions.map((option, index) => (
                         <option key={`supplier-${index}`} value={option}>{option}</option>
                       ))}
@@ -737,9 +1048,17 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                       name="company"
                       value={form.company}
                       onChange={handleChange}
-                      style={{ ...styles.select, flex: 1 }}
+                      style={{ 
+                        ...styles.select, 
+                        flex: 1,
+                        backgroundColor: (fieldsDisabled || loadingCompanies) ? '#f5f5f5' : '#ffffff',
+                        cursor: (fieldsDisabled || loadingCompanies) ? 'not-allowed' : 'pointer'
+                      }}
+                      disabled={fieldsDisabled || loadingCompanies}
                     >
-                      <option value="">Select Company</option>
+                      <option value="">
+                        {loadingCompanies ? 'Loading companies...' : 'Select Company'}
+                      </option>
                       {companyOptions.map((option, index) => (
                         <option key={`company-${index}`} value={option}>{option}</option>
                       ))}
@@ -771,9 +1090,17 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                       name="unit"
                       value={form.unit}
                       onChange={handleChange}
-                      style={{ ...styles.select, flex: 1 }}
+                      style={{ 
+                        ...styles.select, 
+                        flex: 1,
+                        backgroundColor: (fieldsDisabled || loadingUnits) ? '#f5f5f5' : '#ffffff',
+                        cursor: (fieldsDisabled || loadingUnits) ? 'not-allowed' : 'pointer'
+                      }}
+                      disabled={fieldsDisabled || loadingUnits}
                     >
-                      <option value="">Select Unit</option>
+                      <option value="">
+                        {loadingUnits ? 'Loading units...' : 'Select Unit'}
+                      </option>
                       {unitOptions.map((option, index) => (
                         <option key={`unit-${index}`} value={option}>{option}</option>
                       ))}
@@ -815,9 +1142,17 @@ export default function ItemForm({ onSave, onCancel, item = null }) {
                       name="store_location"
                       value={form.store_location}
                       onChange={handleChange}
-                      style={{ ...styles.select, flex: 1 }}
+                      style={{ 
+                        ...styles.select, 
+                        flex: 1,
+                        backgroundColor: (fieldsDisabled || loadingLocations) ? '#f5f5f5' : '#ffffff',
+                        cursor: (fieldsDisabled || loadingLocations) ? 'not-allowed' : 'pointer'
+                      }}
+                      disabled={fieldsDisabled || loadingLocations}
                     >
-                      <option value="">Select Store Location</option>
+                      <option value="">
+                        {loadingLocations ? 'Loading locations...' : 'Select Store Location'}
+                      </option>
                       {locationOptions.map((option, index) => (
                         <option key={`location-${index}`} value={option}>{option}</option>
                       ))}

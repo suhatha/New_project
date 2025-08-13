@@ -174,12 +174,11 @@ export default function ItemTable() {
         for (const row of jsonData) {
           const itemData = {
             name: row.Name || '',
-            short_name: row['Short Name'] || '',
             category: row.Category || '',
             company: row.Company || '',
             supplier: row.Supplier || '',
             mrp: parseFloat(row.MRP) || 0,
-            quantity: parseInt(row.Quantity) || 0,
+            quantity: parseInt(row['Stock Quantity'] || row.Quantity) || 0,
             status: 'active'
           };
 
@@ -203,15 +202,26 @@ export default function ItemTable() {
   };
 
   const handleExport = () => {
-    const dataToExport = items.map(({ name, short_name, category, company, supplier, mrp, quantity }) => ({
-      Name: name,
-      'Short Name': short_name,
-      Category: category,
-      Company: company,
-      Supplier: supplier,
-      MRP: mrp,
-      Quantity: quantity,
-    }));
+    const dataToExport = items.map((item) => {
+      // Calculate stock status for export
+      const getStockStatus = (quantity, minStock) => {
+        const qty = parseInt(quantity) || 0;
+        const minStockThreshold = parseInt(minStock) || 10;
+        if (qty === 0) return 'Out of Stock';
+        else if (qty <= minStockThreshold) return 'Low Stock';
+        else return 'In Stock';
+      };
+      
+      return {
+        Name: item.name,
+        Category: item.category || 'N/A',
+        Company: item.company || 'N/A',
+        Supplier: item.supplier || 'N/A',
+        MRP: item.mrp || 0,
+        'Stock Quantity': item.quantity || 0,
+        Status: getStockStatus(item.quantity, item.min_stock)
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
@@ -294,12 +304,12 @@ export default function ItemTable() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Short Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MRP</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Quantity</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -318,56 +328,76 @@ export default function ItemTable() {
                 </td>
               </tr>
             ) : (
-              filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {item.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.short_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.category}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.company}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.supplier}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    LKR {parseFloat(item.mrp).toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.quantity}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="text-blue-600 hover:text-blue-800 p-1"
-                        title="Edit"
-                      >
-                        <FaEdit size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleHide(item.id)}
-                        className="text-yellow-600 hover:text-yellow-800 p-1"
-                        title="Hide"
-                      >
-                        <FaEyeSlash size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800 p-1"
-                        title="Delete"
-                      >
-                        <FaTrash size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              filteredItems.map((item) => {
+                // Calculate stock status based on quantity and min_stock
+                const getStockStatus = (quantity, minStock) => {
+                  const qty = parseInt(quantity) || 0;
+                  const minStockThreshold = parseInt(minStock) || 10; // Default to 10 if not set
+                  
+                  if (qty === 0) {
+                    return { status: 'Out of Stock', color: 'bg-red-100 text-red-800' };
+                  } else if (qty <= minStockThreshold) {
+                    return { status: 'Low Stock', color: 'bg-yellow-100 text-yellow-800' };
+                  } else {
+                    return { status: 'In Stock', color: 'bg-green-100 text-green-800' };
+                  }
+                };
+                
+                const stockInfo = getStockStatus(item.quantity, item.min_stock);
+                
+                return (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.category || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.company || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.supplier || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      LKR {parseFloat(item.mrp || 0).toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span className="font-medium">{item.quantity || 0}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stockInfo.color}`}>
+                        {stockInfo.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          title="Edit"
+                        >
+                          <FaEdit size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleHide(item.id)}
+                          className="text-yellow-600 hover:text-yellow-800 p-1"
+                          title="Hide"
+                        >
+                          <FaEyeSlash size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          title="Delete"
+                        >
+                          <FaTrash size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
