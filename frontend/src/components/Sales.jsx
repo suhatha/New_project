@@ -1,30 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch, FaFileInvoiceDollar, FaPlus, FaFilter, FaSync, FaDownload, FaPrint, FaEdit, FaTrash, FaChevronDown } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
+import axios from 'axios';
 
 const Sales = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const initialSalesEntries = [
-    {
-      id: 1,
-      type: 'Sale',
-      billNumber: '#U2/SHA/0001',
-      customer: 'Cash Customer',
-      date: '7/25/2025 07:47 PM',
-      total: 160.00,
-      payment: 'cash',
-      status: 'Paid'
-    }
-  ];
-  const [salesEntries, setSalesEntries] = useState(initialSalesEntries);
+  const [salesEntries, setSalesEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [statistics, setStatistics] = useState({
+    totalEntries: 0,
+    totalRevenue: 0,
+    averageSale: 0,
+    dateRange: { from: null, to: null }
+  });
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    status: '',
+    payment_method: '',
+    date_from: '',
+    date_to: ''
+  });
 
-  // Mock data for KPI calculations
-  const totalEntries = salesEntries.length;
-  const totalRevenue = salesEntries.reduce((sum, entry) => sum + entry.total, 0);
-  const averageSale = totalEntries > 0 ? totalRevenue / totalEntries : 0;
+  // API base URL
+  const API_BASE_URL = 'http://127.0.0.1:8000/api';
+
+  // Fetch sales data from backend
+  const fetchSalesData = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      
+      if (searchTerm) params.append('search', searchTerm);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.payment_method) params.append('payment_method', filters.payment_method);
+      if (filters.date_from) params.append('date_from', filters.date_from);
+      if (filters.date_to) params.append('date_to', filters.date_to);
+      
+      const response = await axios.get(`${API_BASE_URL}/sales?${params}`);
+      
+      // Transform backend data to match frontend format
+      const transformedData = response.data.map(sale => ({
+        id: sale.id,
+        type: sale.type,
+        billNumber: sale.bill_number,
+        customer: sale.customer,
+        date: new Date(sale.created_at).toLocaleString(),
+        total: parseFloat(sale.total),
+        payment: sale.payment_method,
+        status: sale.status,
+        notes: sale.notes
+      }));
+      
+      setSalesEntries(transformedData);
+    } catch (error) {
+      console.error('Error fetching sales data:', error);
+      alert('Failed to fetch sales data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch sales statistics
+  const fetchStatistics = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.date_from) params.append('date_from', filters.date_from);
+      if (filters.date_to) params.append('date_to', filters.date_to);
+      
+      const response = await axios.get(`${API_BASE_URL}/sales-statistics?${params}`);
+      setStatistics(response.data);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+    }
+  };
+
+  // Fetch data on component mount and when filters change
+  useEffect(() => {
+    fetchSalesData();
+    fetchStatistics();
+  }, [searchTerm, filters]);
+
+  // Dynamic KPI calculations from statistics
+  const totalEntries = statistics.totalEntries;
+  const totalRevenue = statistics.totalRevenue;
+  const averageSale = statistics.averageSale;
 
   const handleSearch = () => {
     // Search functionality
@@ -46,7 +109,8 @@ const Sales = () => {
   };
 
   const handleRefresh = () => {
-    setSalesEntries(initialSalesEntries);
+    fetchSalesData();
+    fetchStatistics();
   };
 
   const handleExport = () => {
@@ -59,25 +123,45 @@ const Sales = () => {
   };
 
   const handlePrint = (entryId) => {
-    alert(`Printing invoice for entry ${entryId}`);
-    // In a real app, this would open a print dialog
+    // In a real implementation, this would generate and print the invoice
+    const entry = salesEntries.find(e => e.id === entryId);
+    if (entry) {
+      alert(`Printing invoice for ${entry.billNumber}\nCustomer: ${entry.customer}\nTotal: LKR ${entry.total.toFixed(2)}`);
+      // Here you would integrate with a printing service or generate PDF
+    }
   };
 
   const handleEdit = (entryId) => {
-    alert(`Editing sales entry ${entryId}`);
-    // In a real app, this would open an edit form
+    // Navigate to edit form or open edit modal
+    navigate(`/sales/edit/${entryId}`);
   };
 
-  const handleDelete = (entryId) => {
+  const handleDelete = async (entryId) => {
     if (window.confirm('Are you sure you want to delete this sales entry?')) {
-      setSalesEntries(prev => prev.filter(entry => entry.id !== entryId));
-      alert('Sales entry deleted successfully!');
+      try {
+        await axios.delete(`${API_BASE_URL}/sales/${entryId}`);
+        alert('Sales entry deleted successfully!');
+        // Refresh the data
+        fetchSalesData();
+        fetchStatistics();
+      } catch (error) {
+        console.error('Error deleting sales entry:', error);
+        alert('Failed to delete sales entry. Please try again.');
+      }
     }
   };
 
   const handleViewDetails = (entryId) => {
-    alert(`Viewing details for entry ${entryId}`);
-    // In a real app, this would show a detailed view
+    // Navigate to details view or open details modal
+    navigate(`/sales/details/${entryId}`);
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value
+    }));
   };
 
   return (
@@ -149,32 +233,50 @@ const Sales = () => {
         {/* Filters Section (Hidden by default) */}
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Last 30 days</option>
-                  <option>Last 7 days</option>
-                  <option>Last 3 months</option>
-                  <option>Custom range</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                <input
+                  type="date"
+                  value={filters.date_from}
+                  onChange={(e) => handleFilterChange('date_from', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                <input
+                  type="date"
+                  value={filters.date_to}
+                  onChange={(e) => handleFilterChange('date_to', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>All</option>
-                  <option>Cash</option>
-                  <option>Card</option>
-                  <option>Bank Transfer</option>
+                <select
+                  value={filters.payment_method}
+                  onChange={(e) => handleFilterChange('payment_method', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All</option>
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="cheque">Cheque</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>All</option>
-                  <option>Paid</option>
-                  <option>Pending</option>
-                  <option>Cancelled</option>
+                <select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
             </div>
@@ -188,7 +290,11 @@ const Sales = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Entries</p>
-              <p className="text-2xl font-bold text-gray-900">{totalEntries}</p>
+              {loading ? (
+                <div className="animate-pulse h-8 bg-gray-200 rounded w-16"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gray-900">{totalEntries}</p>
+              )}
             </div>
             <div className="text-blue-500">
               <FaFileInvoiceDollar size={24} />
@@ -200,7 +306,11 @@ const Sales = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">LKR {totalRevenue.toFixed(2)}</p>
+              {loading ? (
+                <div className="animate-pulse h-8 bg-gray-200 rounded w-24"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gray-900">LKR {totalRevenue.toFixed(2)}</p>
+              )}
             </div>
             <div className="text-green-500">
               <FaFileInvoiceDollar size={24} />
@@ -212,7 +322,11 @@ const Sales = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Average Sale</p>
-              <p className="text-2xl font-bold text-gray-900">LKR {averageSale.toFixed(2)}</p>
+              {loading ? (
+                <div className="animate-pulse h-8 bg-gray-200 rounded w-20"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gray-900">LKR {averageSale.toFixed(2)}</p>
+              )}
             </div>
             <div className="text-yellow-500">
               <FaFileInvoiceDollar size={24} />
@@ -224,7 +338,16 @@ const Sales = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Date Range</p>
-              <p className="text-2xl font-bold text-gray-900">6/29/2025 - 7/29/2025</p>
+              {loading ? (
+                <div className="animate-pulse h-8 bg-gray-200 rounded w-32"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gray-900">
+                  {statistics.dateRange?.from && statistics.dateRange?.to 
+                    ? `${new Date(statistics.dateRange.from).toLocaleDateString()} - ${new Date(statistics.dateRange.to).toLocaleDateString()}`
+                    : 'All Time'
+                  }
+                </p>
+              )}
             </div>
             <div className="text-purple-500">
               <FaFileInvoiceDollar size={24} />
@@ -250,73 +373,120 @@ const Sales = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {salesEntries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleViewDetails(entry.id)}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      {entry.billNumber}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="font-semibold text-gray-900">{entry.customer}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">LKR {entry.total.toFixed(2)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {entry.payment}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {entry.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handlePrint(entry.id)}
-                        className="text-blue-600 hover:text-blue-800 p-1"
-                        title="Print"
-                      >
-                        <FaPrint size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(entry.id)}
-                        className="text-green-600 hover:text-green-800 p-1"
-                        title="Edit"
-                      >
-                        <FaEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(entry.id)}
-                        className="text-red-600 hover:text-red-800 p-1"
-                        title="Delete"
-                      >
-                        <FaTrash size={16} />
-                      </button>
+              {loading ? (
+                // Loading skeleton rows
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={`loading-${index}`} className="animate-pulse">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-28"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                        <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                        <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                        <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                salesEntries.map((entry) => (
+                  <tr key={entry.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleViewDetails(entry.id)}
-                        className="text-gray-600 hover:text-gray-800 p-1"
-                        title="More Options"
+                        className="text-blue-600 hover:text-blue-800 font-medium"
                       >
-                        <FaChevronDown size={16} />
+                        {entry.billNumber}
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-semibold text-gray-900">{entry.customer}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">LKR {entry.total.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        entry.payment === 'cash' ? 'bg-green-100 text-green-800' :
+                        entry.payment === 'card' ? 'bg-blue-100 text-blue-800' :
+                        entry.payment === 'bank_transfer' ? 'bg-purple-100 text-purple-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {entry.payment}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        entry.status === 'Paid' ? 'bg-green-100 text-green-800' :
+                        entry.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                        entry.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {entry.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handlePrint(entry.id)}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          title="Print"
+                        >
+                          <FaPrint size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(entry.id)}
+                          className="text-green-600 hover:text-green-800 p-1"
+                          title="Edit"
+                        >
+                          <FaEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(entry.id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          title="Delete"
+                        >
+                          <FaTrash size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleViewDetails(entry.id)}
+                          className="text-gray-600 hover:text-gray-800 p-1"
+                          title="More Options"
+                        >
+                          <FaChevronDown size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
       {/* Empty State */}
-      {salesEntries.length === 0 && (
+      {salesEntries.length === 0 && !loading && (
         <div className="text-center py-12">
           <FaFileInvoiceDollar className="mx-auto text-gray-400 text-4xl mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No sales entries found</h3>

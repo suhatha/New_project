@@ -104,8 +104,8 @@ function App() {
         {/* Branch Management route */}
         <Route path="branch-management" element={<BranchManagement />} />
 
-        {/* Expiry route */}
-        <Route path="expiry" element={<Expiry />} />
+        {/* Expiry route - Added key to prevent flashing */}
+        <Route path="expiry" element={<React.StrictMode><Expiry key="expiry-component" /></React.StrictMode>} />
 
         {/* Supplier route */}
         <Route path="supplier" element={<Supplier />} />
