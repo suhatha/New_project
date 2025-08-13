@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { FaSearch, FaPlus, FaFilter, FaSync, FaDownload, FaEye, FaEdit, FaTrash, FaChevronDown } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const Purchasing = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [purchaseEntries, setPurchaseEntries] = useState([
+  const navigate = useNavigate();
+  const initialPurchaseEntries = [
     {
       id: 1,
       billNumber: 'PO-2025-001',
@@ -25,7 +26,10 @@ const Purchasing = () => {
       total: 890.50,
       status: 'Pending'
     }
-  ]);
+  ];
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [purchaseEntries, setPurchaseEntries] = useState(initialPurchaseEntries);
 
   // Calculate summary totals
   const summaryData = useMemo(() => {
@@ -52,12 +56,12 @@ const Purchasing = () => {
     }
   };
 
+  const handleCreatePurchaseOrder = () => {
+    navigate('/purchase-order');
+  };
+
   const handleCreatePurchaseEntry = () => {
-    try {
-      alert('Create Purchase Entry functionality - This would open a purchase entry form');
-    } catch (error) {
-      console.error('Error creating purchase entry:', error);
-    }
+    navigate('/purchase-entry');
   };
 
   const handleShowFilters = () => {
@@ -69,19 +73,15 @@ const Purchasing = () => {
   };
 
   const handleRefresh = () => {
-    try {
-      alert('Refreshing purchase data...');
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
+    setPurchaseEntries(initialPurchaseEntries);
   };
 
   const handleExport = () => {
-    try {
-      alert('Exporting purchase data to Excel/PDF...');
-    } catch (error) {
-      console.error('Error exporting data:', error);
-    }
+    const dataToExport = purchaseEntries.map(({ id, ...rest }) => rest);
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Purchases');
+    XLSX.writeFile(workbook, 'purchasing_data.xlsx');
   };
 
   const handleViewDetails = (entryId) => {
@@ -153,6 +153,13 @@ const Purchasing = () => {
               >
                 <FaPlus size={14} />
                 Create Purchase Entry
+              </button>
+              <button
+                onClick={handleCreatePurchaseOrder}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <FaPlus size={14} />
+                Create Purchase Order
               </button>
               <button
                 onClick={handleShowFilters}

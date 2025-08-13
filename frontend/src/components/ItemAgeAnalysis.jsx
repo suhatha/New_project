@@ -1,93 +1,79 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FaBox, FaShoppingBag, FaChartLine, FaCalendar, FaSearch, FaFileAlt } from 'react-icons/fa';
+import axios from 'axios';
 
 const ItemAgeAnalysis = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAge, setFilterAge] = useState('All Items');
+  const [loading, setLoading] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  
+  // Dynamic data from backend
+  const [pieData, setPieData] = useState([]);
+  const [barData, setBarData] = useState([]);
+  const [tableData, setTableData] = useState([]);
+  const [summary, setSummary] = useState({ totalItems: 0, totalValue: 0 });
 
-  // Mock data for charts
-  const pieData = [
-    { name: '0-30 days', value: 1027, color: '#10B981' }
-  ];
+  // API base URL - adjust this to match your Laravel backend URL
+  const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
-  const barData = [
-    { age: '0-30 days', value: 3430531.49 },
-    { age: '31-60 days', value: 0 },
-    { age: '61-90 days', value: 0 },
-    { age: '90+ days', value: 0 }
-  ];
-
-  // Mock table data with automotive parts
-  const [tableData] = useState([
-    {
-      id: 1,
-      product: 'Engine Oil Filter',
-      category: 'Engine Parts',
-      batch: '1',
-      created: 'Jul 25, 2025',
-      age: 2,
-      purchased: 70.99,
-      sold: 1,
-      stock: 69.99,
-      value: 9798.60
-    },
-    {
-      id: 2,
-      product: 'Brake Pads Set',
-      category: 'Brake System',
-      batch: '2',
-      created: 'Jul 25, 2025',
-      age: 2,
-      purchased: 33,
-      sold: 0,
-      stock: 33,
-      value: 3300
-    },
-    {
-      id: 3,
-      product: 'Air Filter',
-      category: 'Engine Parts',
-      batch: '3',
-      created: 'Jul 25, 2025',
-      age: 2,
-      purchased: 25,
-      sold: 0,
-      stock: 25,
-      value: 4375
-    },
-    {
-      id: 4,
-      product: 'Spark Plugs',
-      category: 'Electrical',
-      batch: '4',
-      created: 'Jul 25, 2025',
-      age: 2,
-      purchased: 5,
-      sold: 0,
-      stock: 5,
-      value: 2250
-    },
-    {
-      id: 5,
-      product: 'Timing Belt',
-      category: 'Engine Parts',
-      batch: '5',
-      created: 'Jul 25, 2025',
-      age: 2,
-      purchased: 11,
-      sold: 0,
-      stock: 11,
-      value: 6930
-    }
-  ]);
-
-  const handleGenerateReport = () => {
+  // Fetch age analysis data from backend
+  const fetchAgeAnalysisData = async () => {
     try {
-      alert('Report generated successfully!');
+      setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/item-age-analysis`);
+      
+      if (response.data.error) {
+        throw new Error(response.data.message);
+      }
+      
+      setPieData(response.data.pieData || []);
+      setBarData(response.data.barData || []);
+      setTableData(response.data.tableData || []);
+      setSummary(response.data.summary || { totalItems: 0, totalValue: 0 });
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('Error fetching age analysis data:', error);
+      alert('Failed to fetch age analysis data. Please try again.');
+      // Set fallback empty data
+      setPieData([]);
+      setBarData([]);
+      setTableData([]);
+      setSummary({ totalItems: 0, totalValue: 0 });
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Fetch data when component mounts
+  useEffect(() => {
+    fetchAgeAnalysisData();
+  }, []);
+
+  // Generate report function
+  const handleGenerateReport = async () => {
+    try {
+      setReportLoading(true);
+      const response = await axios.post(`${API_BASE_URL}/item-age-analysis/generate-report`);
+      
+      if (response.data.error) {
+        throw new Error(response.data.message);
+      }
+      
+      // Show success message with report details
+      const reportData = response.data;
+      alert(`Report generated successfully!\n\nReport ID: ${reportData.reportId}\nGenerated: ${reportData.generatedAt}\nTotal Items: ${reportData.summary?.totalItems || 0}\nTotal Value: ${reportData.summary?.totalValue || 0}`);
+      
+      // Optionally refresh the data after report generation
+      await fetchAgeAnalysisData();
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Failed to generate report. Please try again.');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+
 
   // Use useMemo to prevent infinite re-renders
   const filteredData = useMemo(() => {
@@ -112,37 +98,98 @@ const ItemAgeAnalysis = () => {
   }, [tableData, searchTerm, filterAge]);
 
   // Simple chart components without recharts dependency
-  const SimplePieChart = () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <div className="w-32 h-32 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-lg">
-          100%
+  const SimplePieChart = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-sm text-gray-600">Loading chart data...</p>
+          </div>
         </div>
-        <p className="mt-4 text-sm text-gray-600">0-30 days: 1027 (100%)</p>
-      </div>
-    </div>
-  );
+      );
+    }
 
-  const SimpleBarChart = () => (
-    <div className="h-64 flex items-end justify-center space-x-4">
-      <div className="flex flex-col items-center">
-        <div className="w-16 bg-blue-500 rounded-t" style={{ height: '200px' }}></div>
-        <span className="text-xs mt-2">0-30 days</span>
+    if (pieData.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-gray-500">No data available</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          {pieData.map((item, index) => (
+            <div key={index} className="mb-2">
+              <div 
+                className="w-32 h-32 rounded-full flex items-center justify-center text-white font-bold text-lg mx-auto mb-2"
+                style={{ backgroundColor: item.color }}
+              >
+                {Math.round((item.value / summary.totalItems) * 100)}%
+              </div>
+              <p className="text-sm text-gray-600">
+                {item.name}: {item.value} ({Math.round((item.value / summary.totalItems) * 100)}%)
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="flex flex-col items-center">
-        <div className="w-16 bg-gray-300 rounded-t" style={{ height: '10px' }}></div>
-        <span className="text-xs mt-2">31-60 days</span>
+    );
+  };
+
+  const SimpleBarChart = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-sm text-gray-600">Loading chart data...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (barData.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-gray-500">No data available</p>
+          </div>
+        </div>
+      );
+    }
+
+    const maxValue = Math.max(...barData.map(item => item.value));
+    
+    return (
+      <div className="h-64 flex items-end justify-center space-x-4">
+        {barData.map((item, index) => {
+          const height = maxValue > 0 ? (item.value / maxValue) * 200 : 10;
+          const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+          
+          return (
+            <div key={index} className="flex flex-col items-center">
+              <div className="text-xs mb-1 font-semibold">
+                ${item.value.toLocaleString()}
+              </div>
+              <div 
+                className="w-16 rounded-t" 
+                style={{ 
+                  height: `${Math.max(height, 10)}px`,
+                  backgroundColor: colors[index % colors.length]
+                }}
+              ></div>
+              <span className="text-xs mt-2">{item.age}</span>
+            </div>
+          );
+        })}
       </div>
-      <div className="flex flex-col items-center">
-        <div className="w-16 bg-gray-300 rounded-t" style={{ height: '10px' }}></div>
-        <span className="text-xs mt-2">61-90 days</span>
-      </div>
-      <div className="flex flex-col items-center">
-        <div className="w-16 bg-gray-300 rounded-t" style={{ height: '10px' }}></div>
-        <span className="text-xs mt-2">90+ days</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   try {
     return (
@@ -155,10 +202,24 @@ const ItemAgeAnalysis = () => {
           </div>
           <button
             onClick={handleGenerateReport}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+            disabled={reportLoading || loading}
+            className={`px-6 py-2 rounded-md transition-colors flex items-center gap-2 ${
+              reportLoading || loading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white`}
           >
-            <FaFileAlt size={14} />
-            Generate Report
+            {reportLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Generating...
+              </>
+            ) : (
+              <>
+                <FaFileAlt size={14} />
+                Generate Report
+              </>
+            )}
           </button>
         </div>
 
@@ -167,8 +228,14 @@ const ItemAgeAnalysis = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Variants</p>
-                <p className="text-2xl font-bold text-gray-900">1027</p>
+                <p className="text-sm font-medium text-gray-600">Total Items</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    summary.totalItems || 0
+                  )}
+                </p>
               </div>
               <FaBox className="text-3xl text-blue-600" />
             </div>
@@ -178,7 +245,13 @@ const ItemAgeAnalysis = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Stock</p>
-                <p className="text-2xl font-bold text-gray-900">12530.76</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                  ) : (
+                    tableData.reduce((sum, item) => sum + (item.stock || 0), 0).toLocaleString()
+                  )}
+                </p>
               </div>
               <FaShoppingBag className="text-3xl text-green-600" />
             </div>
@@ -188,7 +261,13 @@ const ItemAgeAnalysis = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Value</p>
-                <p className="text-2xl font-bold text-gray-900">LKR 3,430,531.49</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
+                  ) : (
+                    `$${(summary.totalValue || 0).toLocaleString()}`
+                  )}
+                </p>
               </div>
               <FaChartLine className="text-3xl text-purple-600" />
             </div>
@@ -198,7 +277,15 @@ const ItemAgeAnalysis = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg Age</p>
-                <p className="text-2xl font-bold text-gray-900">2 days</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    tableData.length > 0 
+                      ? `${Math.round(tableData.reduce((sum, item) => sum + (item.age || 0), 0) / tableData.length)} days`
+                      : '0 days'
+                  )}
+                </p>
               </div>
               <FaCalendar className="text-3xl text-orange-600" />
             </div>

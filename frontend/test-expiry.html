@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Expiry Items</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .item-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .expired {
+            border-left: 5px solid red;
+        }
+        .expiring-soon {
+            border-left: 5px solid orange;
+        }
+        .good {
+            border-left: 5px solid green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Expiry Items</h1>
+    
+    <div>
+        <button id="addTestItem">Add Test Item with Expiry</button>
+        <button id="clearItems">Clear All Items</button>
+        <button id="showItems">Show Current Items</button>
+    </div>
+    
+    <h2>Current Items in localStorage</h2>
+    <pre id="itemsOutput">No items to display</pre>
+    
+    <h2>Items with Expiry Dates</h2>
+    <div id="expiryItems"></div>
+    
+    <script>
+        // Function to add a test item
+        document.getElementById('addTestItem').addEventListener('click', function() {
+            const testItem = {
+                item_id: 'TEST' + Date.now(),
+                name: 'Test Medicine ' + Math.floor(Math.random() * 100),
+                barcode: 'B' + Math.floor(Math.random() * 100000),
+                category: 'Medicine',
+                quantity: Math.floor(Math.random() * 100) + 1,
+                expiry: getRandomExpiryDate(),
+                supplier: 'Test Supplier',
+                cost: (Math.random() * 100).toFixed(2),
+                store_location: 'Main Store',
+                branch: 'Main Branch',
+                status: 'active'
+            };
+            
+            // Get existing items or initialize empty array
+            const storedItems = localStorage.getItem('inventory_items');
+            let items = [];
+            
+            if (storedItems) {
+                try {
+                    items = JSON.parse(storedItems);
+                } catch (e) {
+                    console.error('Error parsing stored items:', e);
+                }
+            }
+            
+            // Add new item
+            items.push(testItem);
+            
+            // Save back to localStorage
+            localStorage.setItem('inventory_items', JSON.stringify(items));
+            
+            // Update display
+            showItems();
+            showExpiryItems();
+            
+            alert('Test item added successfully!');
+        });
+        
+        // Function to clear all items
+        document.getElementById('clearItems').addEventListener('click', function() {
+            localStorage.removeItem('inventory_items');
+            document.getElementById('itemsOutput').textContent = 'No items to display';
+            document.getElementById('expiryItems').innerHTML = '';
+            alert('All items cleared!');
+        });
+        
+        // Function to show current items
+        document.getElementById('showItems').addEventListener('click', function() {
+            showItems();
+            showExpiryItems();
+        });
+        
+        // Function to display items
+        function showItems() {
+            const storedItems = localStorage.getItem('inventory_items');
+            const output = document.getElementById('itemsOutput');
+            
+            if (storedItems) {
+                try {
+                    const items = JSON.parse(storedItems);
+                    output.textContent = JSON.stringify(items, null, 2);
+                } catch (e) {
+                    output.textContent = 'Error parsing stored items: ' + e.message;
+                }
+            } else {
+                output.textContent = 'No items to display';
+            }
+        }
+        
+        // Function to display expiry items
+        function showExpiryItems() {
+            const storedItems = localStorage.getItem('inventory_items');
+            const container = document.getElementById('expiryItems');
+            container.innerHTML = '';
+            
+            if (storedItems) {
+                try {
+                    const items = JSON.parse(storedItems);
+                    const itemsWithExpiry = items.filter(item => item.expiry && item.expiry.trim() !== '');
+                    
+                    if (itemsWithExpiry.length === 0) {
+                        container.innerHTML = '<p>No items with expiry dates found</p>';
+                        return;
+                    }
+                    
+                    itemsWithExpiry.forEach(item => {
+                        const status = getExpiryStatus(item.expiry);
+                        const itemElement = document.createElement('div');
+                        itemElement.className = `item-card ${status.toLowerCase().replace(' ', '-')}`;
+                        
+                        itemElement.innerHTML = `
+                            <h3>${item.name}</h3>
+                            <p><strong>ID:</strong> ${item.item_id}</p>
+                            <p><strong>Barcode:</strong> ${item.barcode}</p>
+                            <p><strong>Category:</strong> ${item.category}</p>
+                            <p><strong>Quantity:</strong> ${item.quantity}</p>
+                            <p><strong>Expiry Date:</strong> ${item.expiry}</p>
+                            <p><strong>Supplier:</strong> ${item.supplier}</p>
+                            <p><strong>Status:</strong> <span style="color: ${status === 'Expired' ? 'red' : status === 'Expiring Soon' ? 'orange' : 'green'}">${status}</span></p>
+                        `;
+                        
+                        container.appendChild(itemElement);
+                    });
+                } catch (e) {
+                    container.innerHTML = '<p>Error parsing stored items: ' + e.message + '</p>';
+                }
+            } else {
+                container.innerHTML = '<p>No items to display</p>';
+            }
+        }
+        
+        // Function to determine expiry status
+        function getExpiryStatus(date) {
+            const today = new Date();
+            const expiry = new Date(date);
+            const diff = (expiry - today) / (1000 * 60 * 60 * 24);
+            
+            if (diff <= 0) return 'Expired';
+            if (diff <= 30) return 'Expiring Soon';
+            return 'Good';
+        }
+        
+        // Function to generate a random expiry date
+        function getRandomExpiryDate() {
+            const today = new Date();
+            
+            // Random number of days: -30 to +90 days from today
+            const randomDays = Math.floor(Math.random() * 120) - 30;
+            
+            const expiryDate = new Date(today);
+            expiryDate.setDate(today.getDate() + randomDays);
+            
+            return expiryDate.toISOString().slice(0, 10);
+        }
+        
+        // Initialize display
+        showItems();
+        showExpiryItems();
+    </script>
+</body>
+</html>

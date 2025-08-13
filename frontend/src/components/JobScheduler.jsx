@@ -287,6 +287,7 @@ const JobScheduler = () => {
         </div>
       </div>
 
+
       {/* Add/Edit Appointment Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -338,7 +339,7 @@ const JobScheduler = () => {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
                     <select
@@ -354,6 +355,7 @@ const JobScheduler = () => {
                       ))}
                     </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
                     <select
@@ -372,9 +374,7 @@ const JobScheduler = () => {
                         ))}
                     </select>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Technician</label>
                     <select
@@ -389,6 +389,7 @@ const JobScheduler = () => {
                       ))}
                     </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Bay</label>
                     <select
@@ -404,6 +405,8 @@ const JobScheduler = () => {
                     </select>
                   </div>
                 </div>
+
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
@@ -421,15 +424,19 @@ const JobScheduler = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+
                   <textarea
                     name="notes"
                     value={newAppointment.notes}
                     onChange={handleInputChange}
+
                     rows="3"
                     className="w-full p-2 border rounded"
+
                   />
                 </div>
               </div>
+
 
               <div className="p-6 pt-4 border-t border-gray-200 mt-auto">
                 <div className="flex justify-end space-x-3">
@@ -448,6 +455,7 @@ const JobScheduler = () => {
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors min-w-[100px]"
                   >
                     {editingAppointment ? 'Update' : 'Add'} Appointment
+
                   </button>
                 </div>
               </div>

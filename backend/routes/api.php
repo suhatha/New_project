@@ -5,6 +5,17 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\ExpiryItemController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\StoreLocationController;
+use App\Http\Controllers\ItemAgeAnalysisController;
+use App\Http\Controllers\SalesController;
+
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ServiceWorkflowController;
@@ -12,12 +23,22 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceBayController;
 use App\Http\Controllers\TechnicianController;  
 
+
 // Role routes
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/roles/{id}', [RoleController::class, 'show']);
 Route::post('/roles', [RoleController::class, 'store']);
 Route::put('/roles/{id}', [RoleController::class, 'update']);
 Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+
+// Test route to check if API is working
+Route::get('/test', function() {
+    return response()->json([
+        'message' => 'API is working!',
+        'timestamp' => now(),
+        'status' => 'success'
+    ]);
+});
 
 // Role-Permission routes (UI-managed permissions)
 Route::get('/role-permissions/{role_id}', [RolePermissionController::class, 'index']);
@@ -61,6 +82,23 @@ Route::get('test/roles', function() {
     return response()->json([
         'roles' => $roles,
         'count' => $roles->count()
+    ]);
+});
+
+// Test route to check users
+Route::get('test/users', function() {
+    $users = \App\Models\User::with('role')->get();
+    return response()->json([
+        'users' => $users->map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role ? $user->role->name : 'No role',
+                'created_at' => $user->created_at
+            ];
+        }),
+        'count' => $users->count()
     ]);
 });
 
@@ -209,6 +247,7 @@ Route::get('test/verify-api', function() {
     }
 });
 
+// Test route to check user creation data
 Route::post('test/user-create', function(\Illuminate\Http\Request $request) {
     return response()->json([
         'received_data' => $request->all(),
@@ -243,3 +282,64 @@ Route::middleware('auth:api')->group(function () {
     Route::get('cashier', fn() => response()->json(['message' => 'Cashier Dashboard']))
         ->middleware('role:cashier');
 });
+
+// Item routes
+Route::get('items', [ItemController::class, 'index']);
+Route::post('items', [ItemController::class, 'store']);
+Route::get('items/{id}', [ItemController::class, 'show']);
+Route::put('items/{id}', [ItemController::class, 'update']);
+Route::delete('items/{id}', [ItemController::class, 'destroy']);
+Route::get('items/categories/list', [ItemController::class, 'getCategories']);
+Route::get('items/suppliers/list', [ItemController::class, 'getSuppliers']);
+
+// Expiry routes (temporarily disabled for debugging)
+// Route::get('/expiry-items', [ExpiryItemController::class, 'index']);
+// Route::post('/expiry-items', [ExpiryItemController::class, 'store']);
+
+// Supplier routes
+Route::get('/suppliers', [SupplierController::class, 'index']);
+Route::post('/suppliers', [SupplierController::class, 'store']);
+Route::get('/suppliers/{supplier}', [SupplierController::class, 'show']);
+Route::put('/suppliers/{supplier}', [SupplierController::class, 'update']);
+Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy']);
+
+// Category routes
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::get('/categories/{category}', [CategoryController::class, 'show']);
+Route::put('/categories/{category}', [CategoryController::class, 'update']);
+Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+
+// Company routes
+Route::get('/companies', [CompanyController::class, 'index']);
+Route::post('/companies', [CompanyController::class, 'store']);
+Route::get('/companies/{company}', [CompanyController::class, 'show']);
+Route::put('/companies/{company}', [CompanyController::class, 'update']);
+Route::delete('/companies/{company}', [CompanyController::class, 'destroy']);
+
+// Unit routes
+Route::get('/units', [UnitController::class, 'index']);
+Route::post('/units', [UnitController::class, 'store']);
+Route::get('/units/{unit}', [UnitController::class, 'show']);
+Route::put('/units/{unit}', [UnitController::class, 'update']);
+Route::delete('/units/{unit}', [UnitController::class, 'destroy']);
+
+// Store Location routes
+Route::get('/store-locations', [StoreLocationController::class, 'index']);
+Route::post('/store-locations', [StoreLocationController::class, 'store']);
+Route::get('/store-locations/{storeLocation}', [StoreLocationController::class, 'show']);
+Route::put('/store-locations/{storeLocation}', [StoreLocationController::class, 'update']);
+Route::delete('/store-locations/{storeLocation}', [StoreLocationController::class, 'destroy']);
+
+// Item Age Analysis routes
+Route::get('/item-age-analysis', [ItemAgeAnalysisController::class, 'getAgeAnalysisData']);
+Route::post('/item-age-analysis/generate-report', [ItemAgeAnalysisController::class, 'generateReport']);
+
+// Sales routes
+Route::get('/sales', [SalesController::class, 'index']);
+Route::post('/sales', [SalesController::class, 'store']);
+Route::get('/sales/{sale}', [SalesController::class, 'show']);
+Route::put('/sales/{sale}', [SalesController::class, 'update']);
+Route::delete('/sales/{sale}', [SalesController::class, 'destroy']);
+Route::get('/sales-statistics', [SalesController::class, 'getStatistics']);
+Route::get('/generate-bill-number', [SalesController::class, 'generateBillNumber']);
