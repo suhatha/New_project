@@ -61,6 +61,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { updateCurrentPage } = usePageContext();
   const [role, setRole] = useState("");
+  const [permissions, setPermissions] = useState([]); // <-- FIX: add permissions state
 
   // Dropdown states
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -74,18 +75,36 @@ const Sidebar = () => {
   const [multiBranchOpen, setMultiBranchOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [userManagementOpen, setUserManagementOpen] = useState(false);
+  // DEBUG: Add a test button to verify state
+  // Remove after debugging
+  // <button onClick={() => setUserManagementOpen(!userManagementOpen)}>Toggle User Management (debug)</button>
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     setRole(storedUser?.role || "guest");
+    // Fetch permissions for the current user's role_id
+    if (storedUser?.role_id) {
+      import('axios').then(({default: axios}) => {
+        axios.get(`http://localhost:8000/api/role-permissions/${storedUser.role_id}`)
+          .then(res => setPermissions(res.data.current_permissions || []))
+          .catch(() => setPermissions([]));
+      });
+    }
   }, []);
 
-  const hasFullAccess = ["super_admin", "admin", "manager"].includes(role);
+  // Step 2: canView helper
+  const canView = (moduleName) => {
+    const norm = (s) => s?.toString().toLowerCase().trim();
+    const perm = permissions.find(p => norm(p.module_name) === norm(moduleName));
+    return perm?.can_view;
+  };
+
+  const hasFullAccess = ["super_admin", "admin", "manager", "user"].includes(role);
 
   const navItem = (Icon, label, path) => (
     <li
       key={label}
-      className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-white/20 cursor-pointer transition-colors"
+      className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-white/20 cursor-pointer transition-colors justify-between"
       onClick={() => {
         navigate(path);
         updateCurrentPage(label);
@@ -95,13 +114,13 @@ const Sidebar = () => {
       role="link"
       aria-label={`Go to ${label}`}
     >
-      <Icon className="min-w-[20px]" />
       <span className="truncate">{label}</span>
+      <Icon className="min-w-[20px] ml-2" />
     </li>
   );
 
   return (
-    <nav className="w-64 h-screen text-white relative flex flex-col shadow-xl select-none">
+    <nav className="w-72 h-screen text-white relative flex flex-col shadow-xl select-none">
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -135,31 +154,30 @@ const Sidebar = () => {
         <div className="flex-grow bg-black/60 p-4 overflow-y-auto m-3 rounded-b-lg">
           <ul className="space-y-3">
             {/* I. Dashboard */}
+            {/* I. Dashboard */}
             {navItem(FaTachometerAlt, "Dashboard", "/dashboard")}
 
             {/* II. Branch Management */}
             {navItem(FaBuilding, "Branch Management", "/branch-management")}
 
-            {/* User Management Dropdown */}
-            {hasFullAccess && (
-              <li>
-                <button onClick={() => setUserManagementOpen(!userManagementOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
-                  <div className="flex items-center gap-3">
-                    <FaUsersCog />
-                    <span>User Management</span>
-                  </div>
-                  <span>{userManagementOpen ? "▲" : "▼"}</span>
-                </button>
-                {userManagementOpen && (
-                  <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
-                    {navItem(FaUsers, "Users", "/users")}
-                    {navItem(FaUserShield, "Roles", "/roles")}
-                  </ul>
-                )}
-              </li>
-            )}
+            {/* III. User Management Dropdown */}
+            <li>
+              <button onClick={() => setUserManagementOpen(!userManagementOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
+                <div className="flex items-center gap-3">
+                  <FaUsersCog />
+                  <span>User Management</span>
+                </div>
+                <span>{userManagementOpen ? "▲" : "▼"}</span>
+              </button>
+              {userManagementOpen && (
+                <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
+                  {navItem(FaUsers, "Users", "/users")}
+                  {navItem(FaUserShield, "Roles", "/roles")}
+                </ul>
+              )}
+            </li>
 
-            {/* III. Inventory */}
+            {/* IV. Inventory */}
             <li>
               <button onClick={() => setInventoryOpen(!inventoryOpen)} className="flex items-center justify-between w-full px-4 py-2 rounded-md hover:bg-white/20">
                 <div className="flex items-center gap-3">
@@ -169,6 +187,7 @@ const Sidebar = () => {
                 <span>{inventoryOpen ? "▲" : "▼"}</span>
               </button>
               {inventoryOpen && (
+               
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaCube, "Item", "/item")}
                   {navItem(FaCalendar, "Expiry", "/expiry")}
@@ -181,6 +200,7 @@ const Sidebar = () => {
                   {navItem(FaChartLine, "Item Age Analyze", "/item-age-analyze")}
                 </ul>
               )}
+            
             </li>
 
             {/* IV. Sales */}
@@ -233,6 +253,7 @@ const Sidebar = () => {
               {jobOrderOpen && (
                 <ul className="pl-10 pt-2 space-y-2 text-white/90 bg-white/10 rounded">
                   {navItem(FaCalendarAlt, "Job Scheduler", "/job-scheduler")}
+                  {navItem(FaTools, "Service Workflow", "/service-workflow")}
                   {navItem(FaCogs, "Service Bay Assignment", "/service-bay")}
                   {navItem(FaTools, "Parts Estimation, Labor Costing", "/parts-estimation")}
                   {navItem(FaCamera, "Photo Upload for Damages", "/photo-upload")}
